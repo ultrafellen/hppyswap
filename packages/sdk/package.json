@@ -13,10 +13,10 @@
     "sync-abis": "node scripts/sync-abis.mjs"
   },
   "dependencies": {
-    "viem": "^2.55.2"
+    "viem": "2.55.2"
   },
   "devDependencies": {
-    "typescript": "^7.0.2",
-    "vitest": "^4.1.10"
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
   }
 }
