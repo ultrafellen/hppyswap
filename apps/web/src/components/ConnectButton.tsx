@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useState } from "react";
-import { useAccount, useConnect, useConnectors, useDisconnect, useSwitchChain } from "wagmi";
+import { useConnect, useConnection, useConnectors, useDisconnect, useSwitchChain } from "wagmi";
 import { hpp } from "@hppyswap/sdk";
 import { truncateAddress } from "../lib/address";
 
@@ -12,11 +12,11 @@ import { truncateAddress } from "../lib/address";
  */
 export function ConnectButton() {
   const [expanded, setExpanded] = useState(false);
-  const { address, isConnected, chainId } = useAccount();
+  const { address, isConnected, chainId } = useConnection();
   const connectors = useConnectors();
-  const { connect, isPending: isConnecting, error: connectError } = useConnect();
-  const { disconnect, isPending: isDisconnecting } = useDisconnect();
-  const { switchChain, isPending: isSwitching, error: switchError } = useSwitchChain();
+  const { mutate: connect, isPending: isConnecting, error: connectError } = useConnect();
+  const { mutate: disconnect, isPending: isDisconnecting } = useDisconnect();
+  const { mutate: switchChain, isPending: isSwitching, error: switchError } = useSwitchChain();
 
   if (!isConnected) {
     return (
