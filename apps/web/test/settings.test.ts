@@ -35,4 +35,12 @@ describe("settings round-trip", () => {
     localStorage.setItem("hppyswap.settings.v1", "not json");
     expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
   });
+
+  it("merges a partial stored object with defaults", () => {
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ slippageBps: 100 }));
+    const loaded = loadSettings();
+    expect(loaded.slippageBps).toBe(100);
+    expect(loaded.deadlineMinutes).toBe(20);
+    expect(loaded.rpcUrl).toBeNull();
+  });
 });

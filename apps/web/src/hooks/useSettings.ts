@@ -19,12 +19,14 @@ export function useSettings(): UseSettingsReturn {
   const [settings, setSettingsState] = useState<Settings>(() => loadSettings());
 
   const setSettings = useCallback((next: Settings | ((prev: Settings) => Settings)) => {
-    setSettingsState((prev) => {
-      const resolved = typeof next === "function" ? (next as (prev: Settings) => Settings)(prev) : next;
-      saveSettings(resolved);
-      return resolved;
-    });
-  }, []);
+    // Resolve the next value and persist it outside the state updater. The
+    // updater passed to setState can be invoked more than once per update
+    // (e.g. React StrictMode's double-invoke in development), so any side
+    // effect like saveSettings must not live inside it.
+    const resolved = typeof next === "function" ? (next as (prev: Settings) => Settings)(settings) : next;
+    saveSettings(resolved);
+    setSettingsState(resolved);
+  }, [settings]);
 
   const resetSettings = useCallback(() => {
     saveSettings(DEFAULT_SETTINGS);
