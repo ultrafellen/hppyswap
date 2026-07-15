@@ -4,10 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>hppyswap</title>
-    <!-- Inline style paints the dark background immediately, before theme.css loads,
-         to avoid a white flash on first paint. -->
+    <!-- Restores the persisted theme onto <html> before any CSS or React loads,
+         so the pre-paint style below (and theme.css once it loads) both agree
+         with the stored preference. Must run before the <style> tag so the
+         attribute selector below matches on first paint — no flash either way. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("hppyswap.theme") === "light") {
+            document.documentElement.dataset.theme = "light";
+          }
+        } catch (e) {
+          // localStorage unavailable — fall back to the dark default below.
+        }
+      })();
+    </script>
+    <!-- Inline style paints the correct background immediately, before
+         theme.css loads, to avoid a flash of the wrong theme's colors. -->
     <style>
       html, body { background: #12151b; color: #eef2f6; }
+      html[data-theme="light"], html[data-theme="light"] body { background: #f4f6f8; color: #14181f; }
     </style>
   </head>
   <body>
