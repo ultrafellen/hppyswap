@@ -5,6 +5,17 @@ on:
 permissions:
   contents: read
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      contracts: ${{ steps.f.outputs.contracts }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: f
+        with:
+          filters: |
+            contracts: ['contracts/**', '.github/workflows/ci.yml']
   js:
     runs-on: ubuntu-latest
     steps:
@@ -17,6 +28,8 @@ jobs:
       - run: pnpm test
       - run: pnpm build
   contracts:
+    needs: changes
+    if: needs.changes.outputs.contracts == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
