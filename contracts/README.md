@@ -75,8 +75,9 @@ cat deployment-190415.json
 The script writes `factory`, `weth`, `router`, and `initCodeHash` to
 `deployment-190415.json` at the package root. For a real deployment, copy
 those addresses into the app's `deployments.json`. For a local dry run,
-delete the generated artifacts afterward — they are git-ignored and should
-never be committed:
+delete the generated artifacts afterward — `broadcast/` is git-ignored, but
+`deployment-190415.json` is NOT git-ignored and must be deleted manually after
+recording the addresses; it must never be committed:
 
 ```shell
 kill %1               # stop anvil
