@@ -6,13 +6,19 @@ import { useReadContract } from "wagmi";
 import { StatusLine } from "../components/StatusLine";
 import { TokenIcon } from "../components/TokenIcon";
 import { usePools, type PoolRow } from "../hooks/usePools";
+import { toPricableToken, useUsdPrice } from "../hooks/useUsdPrices";
 import { formatAmount } from "../lib/format";
+import { formatUsd, poolTvlE18 } from "../lib/usd";
 import { resolveTokenLogo } from "../lib/tokenIcons";
 
 const POOLS_LIMIT = 50;
 
 function PoolTableRow({ pool, navigate }: { pool: PoolRow; navigate: NavigateFunction }) {
   const to = `/pools/${pool.pair}`;
+
+  const price0 = useUsdPrice(toPricableToken(pool.token0));
+  const price1 = useUsdPrice(toPricableToken(pool.token1));
+  const tvlE18 = poolTvlE18(pool.reserve0, pool.token0.decimals, price0, pool.reserve1, pool.token1.decimals, price1);
 
   // The row itself navigates on click for a large, mouse-friendly hit
   // target, but bails out when the click originated from the pair <Link> so
@@ -40,6 +46,9 @@ function PoolTableRow({ pool, navigate }: { pool: PoolRow; navigate: NavigateFun
         {formatAmount(pool.reserve0, pool.token0.decimals)} {pool.token0.symbol}
         {" · "}
         {formatAmount(pool.reserve1, pool.token1.decimals)} {pool.token1.symbol}
+      </td>
+      <td className="pool-tvl-cell" data-agent="pool-tvl">
+        {tvlE18 != null ? formatUsd(tvlE18) : "—"}
       </td>
     </tr>
   );
@@ -108,6 +117,7 @@ export function PoolsPage() {
               <tr>
                 <th scope="col">pair</th>
                 <th scope="col">reserves</th>
+                <th scope="col">tvl</th>
               </tr>
             </thead>
             <tbody>

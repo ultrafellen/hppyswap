@@ -11,8 +11,10 @@ import { StatusLine, type StatusTone } from "../components/StatusLine";
 import { usePair } from "../hooks/usePair";
 import { useLiquidity } from "../hooks/useLiquidity";
 import type { PoolRow, TokenMeta } from "../hooks/usePools";
+import { toPricableToken, useUsdPrice } from "../hooks/useUsdPrices";
 import { buildPoolRows } from "../lib/pools";
 import { formatAmount, parseAmount, toPlainAmount } from "../lib/format";
+import { formatUsd, poolTvlE18 } from "../lib/usd";
 import { resolveTokenLogo } from "../lib/tokenIcons";
 import { computeSharePercent, deriveSecondAmount, lpAmountForPercent } from "../lib/liquidity";
 
@@ -142,6 +144,36 @@ export function PoolDetailPage() {
   });
   const lpBalance = lpBalanceData ?? 0n;
   const sharePercent = totalSupply != null ? computeSharePercent(lpBalance, totalSupply) : 0;
+
+  // Pool TVL + the caller's position value (Task 21), USDC.e-anchored via
+  // on-chain reserves only — same `pool-tvl` selector the pools list uses,
+  // reused here rather than a page-specific name (see the catalog
+  // changelog). `positionValueE18 = tvl × (lpBalance / totalSupply)` stays
+  // pure bigint math throughout (no float `sharePercent` in the multiply)
+  // so it doesn't inherit that value's display-only rounding.
+  const usdPrice0 = useUsdPrice(displayPool ? toPricableToken(displayPool.token0) : null);
+  const usdPrice1 = useUsdPrice(displayPool ? toPricableToken(displayPool.token1) : null);
+  const tvlE18 = displayPool
+    ? poolTvlE18(
+        displayPool.reserve0,
+        displayPool.token0.decimals,
+        usdPrice0,
+        displayPool.reserve1,
+        displayPool.token1.decimals,
+        usdPrice1,
+      )
+    : null;
+  // Unlike `lpBalance` above (which defaults a still-loading read to 0 for
+  // the pre-existing `liq-lp-balance` line), this new line keeps "no owner
+  // connected" (definitely 0) distinct from "an owner is connected but
+  // their balance read hasn't resolved yet" (unknown) — otherwise a
+  // connected holder with a real position would flash "my position $0"
+  // while the read is still in flight.
+  const ownerLpBalance = owner ? lpBalanceData : 0n;
+  const positionValueE18 =
+    tvlE18 != null && totalSupply != null && totalSupply > 0n && ownerLpBalance != null
+      ? (tvlE18 * ownerLpBalance) / totalSupply
+      : null;
 
   const { addLiquidity, removeLiquidity, status, error, reset } = useLiquidity();
   const busy = status === "approving" || status === "pending";
@@ -328,6 +360,12 @@ export function PoolDetailPage() {
           </p>
           <p className="lp-balance-line" data-agent="liq-lp-balance">
             my LP {formatAmount(lpBalance, LP_DECIMALS)} ({sharePercent.toFixed(2)}% share)
+          </p>
+          <p className="pool-tvl-line" data-agent="pool-tvl">
+            tvl {tvlE18 != null ? formatUsd(tvlE18) : "—"}
+          </p>
+          <p className="pool-position-value-line" data-agent="liq-position-value">
+            my position {positionValueE18 != null ? formatUsd(positionValueE18) : "—"}
           </p>
         </div>
       )}

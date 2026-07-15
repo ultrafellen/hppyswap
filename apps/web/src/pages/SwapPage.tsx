@@ -20,7 +20,9 @@ import { SettingsPopover } from "../components/SettingsPopover";
 import { StatusLine, type StatusTone } from "../components/StatusLine";
 import { usePair } from "../hooks/usePair";
 import { useSwap } from "../hooks/useSwap";
+import { useUsdPrice } from "../hooks/useUsdPrices";
 import { formatAmount, parseAmount, toPlainAmount } from "../lib/format";
+import { formatUsdApprox, usdValueE18 } from "../lib/usd";
 import { buildCandidatePaths, pickBestRoute } from "../lib/routing";
 
 const HIGH_IMPACT_BPS = 1500;
@@ -114,6 +116,17 @@ export function SwapPage() {
     [best, quoted],
   );
   const quotedOut: bigint | null = best?.amountOut ?? null;
+
+  // USD conversion lines under each side (Task 21) — anchored to USDC.e via
+  // the on-chain reserves only (no external price API). `null` (no price
+  // route, or no amount to convert) renders as empty text, not "$0" or "—".
+  const usdPriceIn = useUsdPrice(tokenIn);
+  const usdPriceOut = useUsdPrice(tokenOut);
+  const usdIn = amountIn && amountIn > 0n && usdPriceIn != null ? usdValueE18(amountIn, tokenIn.decimals, usdPriceIn) : null;
+  const usdOut =
+    tokenOut && quotedOut != null && quotedOut > 0n && usdPriceOut != null
+      ? usdValueE18(quotedOut, tokenOut.decimals, usdPriceOut)
+      : null;
 
   // Rate shown on the "quote" line: the router-quoted rate for the current
   // amount when one is typed, else a reserve-based unit-rate preview from
@@ -335,6 +348,9 @@ export function SwapPage() {
               excludeAddress={tokenOut?.address}
             />
           </div>
+          <div className="swap-side-usd" data-agent="swap-usd-in">
+            {formatUsdApprox(usdIn)}
+          </div>
           <div className="swap-side-balance">
             balance {balance ? formatAmount(balance.value, balance.decimals, 6) : "—"} {tokenIn.symbol}
             <button
@@ -378,6 +394,9 @@ export function SwapPage() {
               disabled={inputsDisabled}
               excludeAddress={tokenIn.address}
             />
+          </div>
+          <div className="swap-side-usd" data-agent="swap-usd-out">
+            {formatUsdApprox(usdOut)}
           </div>
         </div>
       </div>

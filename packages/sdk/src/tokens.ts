@@ -29,6 +29,15 @@ export const USDC_E: TokenInfo = {
 };
 export const DEFAULT_TOKENS: TokenInfo[] = [NATIVE_ETH, HPP, USDC_E];
 /**
+ * The $1 price anchor for Task 21's on-chain USD price display: no external
+ * price feed, so every USD figure in the app is ultimately "how much
+ * USDC.e does the AMM say this is worth" (directly, or via a WETH-bridged
+ * mid price for tokens with no direct USDC.e pool). Reuses the existing
+ * `USDC_E` object rather than a duplicate literal, so it can never drift
+ * from `DEFAULT_TOKENS`' entry.
+ */
+export const USD_ANCHOR: TokenInfo = USDC_E;
+/**
  * Intermediate tokens the swap router tries as a 2-hop bridge when no
  * direct pair exists (Task 17) — e.g. ETH -> USDC.e -> HPP when ETH/HPP has
  * no pool but ETH/USDC.e and USDC.e/HPP both do. Deliberately just these

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { APIRoute } from "astro";
-import { hpp, ADDRESSES, DEFAULT_TOKENS, ROUTE_BASES, isDeployed } from "@hppyswap/sdk";
+import { hpp, ADDRESSES, DEFAULT_TOKENS, ROUTE_BASES, USD_ANCHOR, isDeployed } from "@hppyswap/sdk";
 
 export const GET: APIRoute = () => {
   // Map tokens to make logoURI absolute against the app origin (https://hppy.ai).
@@ -28,6 +28,9 @@ export const GET: APIRoute = () => {
         contracts: ADDRESSES,
         tokens,
         routeBases: ROUTE_BASES,
+        // The $1 price anchor Task 21's USD display derives every price
+        // from (directly, or bridged through WETH) — no external price API.
+        usdAnchor: USD_ANCHOR.address,
         uiSelectorsDoc: "https://docs.hppy.ai/agents/ui-selectors/",
       },
       null,

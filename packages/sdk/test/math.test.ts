@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "vitest";
-import { getAmountOut, getAmountIn, quote, applySlippage, priceImpactBps, combineImpactBps } from "../src/math";
+import { getAmountOut, getAmountIn, quote, applySlippage, priceImpactBps, combineImpactBps, midPriceE18 } from "../src/math";
 
 describe("getAmountOut", () => {
   it("matches x*y=k with 0.3% fee", () => {
@@ -49,5 +49,24 @@ describe("combineImpactBps", () => {
   });
   it("stays 0 when every hop has 0 impact", () => {
     expect(combineImpactBps([0, 0])).toBe(0);
+  });
+});
+describe("midPriceE18", () => {
+  it("prices 1 WETH (18dp) in USDC.e (6dp) terms — live-pool-shaped ratio 1,934e6 : 1e18", () => {
+    // 1,934 USDC.e : 1 WETH reserves -> 1 WETH costs 1,934 USDC.e, as an
+    // 1e18 fixed-point bigint (1934 * 1e18).
+    expect(midPriceE18(10n ** 18n, 1934000000n, 18, 6)).toBe(1934n * 10n ** 18n);
+  });
+  it("prices 1 USDC.e (6dp) in WETH (18dp) terms — same reserves, base/quote swapped", () => {
+    // Asymmetric-decimals reverse direction: base now has fewer decimals
+    // (6) than quote (18). Exact value is 1e18/1934 (reserveQuote=1e18
+    // cancels cleanly against the 1e18 fixed-point scale).
+    expect(midPriceE18(1934000000n, 10n ** 18n, 6, 18)).toBe(517063081695966n);
+  });
+  it("throws INSUFFICIENT_LIQUIDITY when the base reserve is zero", () => {
+    expect(() => midPriceE18(0n, 1934000000n, 18, 6)).toThrow("INSUFFICIENT_LIQUIDITY");
+  });
+  it("throws INSUFFICIENT_LIQUIDITY when the quote reserve is zero", () => {
+    expect(() => midPriceE18(10n ** 18n, 0n, 18, 6)).toThrow("INSUFFICIENT_LIQUIDITY");
   });
 });

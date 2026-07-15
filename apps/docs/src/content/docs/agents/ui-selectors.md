@@ -31,6 +31,16 @@ or visible text (which can change for purely cosmetic reasons).
   5% impact, `[data-agent="swap-impact"]`'s text includes a literal
   `⚠ high impact` marker appended to the percentage — an agent doesn't need
   to parse color or CSS classes to detect it.
+- **USD conversions render, even with nothing to show.** `swap-usd-in` and
+  `swap-usd-out` are always present in the DOM once a swap side has a token
+  selected — when there's no amount typed yet, or no USD price route is
+  known for that token (no direct or WETH-bridged USDC.e pool), the element
+  renders with **empty text content** rather than being omitted or showing
+  a placeholder like "$0" or "—". `pool-tvl` and `liq-position-value`
+  follow the opposite, table/summary-line convention instead: they render
+  the literal text `"—"` when no USD price is known, since they sit next to
+  other always-populated cells/lines rather than being the sole content of
+  an input's helper line.
 
 ## Global (every page)
 
@@ -51,8 +61,10 @@ or visible text (which can change for purely cosmetic reasons).
 | Selector | Element | Purpose |
 |---|---|---|
 | `swap-amount-in` | Sell amount `<input>` | Type the amount to sell |
+| `swap-usd-in` | Sell-side USD line | Text: `~$1,934.21`-style USD conversion of the typed sell amount, USDC.e-anchored (see [Deriving USD prices](/agents/onchain/#deriving-usd-prices)); empty text when no amount is typed or no USD price route is known |
 | `swap-max` | "max" button | Fills the sell amount with the connected wallet's full balance of the sell token |
 | `swap-amount-out` | Buy amount `<input>` (read-only) | Shows the live router quote for the sell amount |
+| `swap-usd-out` | Buy-side USD line | Same convention as `swap-usd-in`, for the quoted buy amount |
 | `swap-token-in` | Sell token select trigger | Opens the token picker for the sell side |
 | `swap-token-out` | Buy token select trigger | Opens the token picker for the buy side |
 | `swap-direction-flip` | "↓" button | Swaps sell/buy tokens and clears the amount |
@@ -71,8 +83,9 @@ or visible text (which can change for purely cosmetic reasons).
 
 | Selector | Element | Purpose |
 |---|---|---|
-| `pools-table` | `<table>` of all pools | Columns: pair, reserves |
+| `pools-table` | `<table>` of all pools | Columns: pair, reserves, tvl |
 | `pool-row` | `<tr>` per pool | Also carries `data-pair="0x…"` — the pair contract address; click navigates to `/pools/:pairAddress` |
+| `pool-tvl` | tvl `<td>` per pool row | Both reserves' combined USD value (see [Deriving USD prices](/agents/onchain/#deriving-usd-prices)); text `"—"` when no USD price is known for one or both sides. Also used, unchanged, for the pool detail page's total-TVL header line below |
 | `pools-create` | "+ create pool" link | Navigates to `/pools/new` |
 | `pools-limit-note` | "showing first N of M pools" text | Only present when the factory has more pairs than the list's 50-row limit |
 | `pools-status` | `aria-live` status region | "no pools yet…", "loading pools…", or the not-deployed message |
@@ -87,6 +100,8 @@ or visible text (which can change for purely cosmetic reasons).
 | `liq-amount-b` | Deposit amount B `<input>` | Same, deriving amount A |
 | `liq-add-execute` | "add liquidity ↵" button | Submits the add-liquidity transaction (with approvals as needed) |
 | `liq-lp-balance` | "my LP … (X% share)" text | Only on an existing pool, when connected |
+| `pool-tvl` | "tvl …" text | Only on an existing pool. Same selector as the pools list's tvl column (see above) — both reserves' combined USD value, `"—"` when unknown |
+| `liq-position-value` | "my position …" text | Only on an existing pool. `share × tvl` — the caller's LP share of the pool's combined USD value, computed as `tvl × lpBalance / totalSupply` (bigint throughout, not `sharePercent × tvl`); `"—"` when tvl is unknown |
 | `liq-reserves` | "reserves: …" text | Only on an existing pool |
 | `liq-initial-price-note` | "you are setting the initial price for this pool." text | Only shown for a brand-new pool (no existing ratio to match) |
 | `liq-remove-percent-group` | Container `<div>` for the 4 percent buttons | Groups the preset buttons below |
@@ -114,6 +129,7 @@ Selector additions are backward compatible; renames, removals, or
 behavior changes are not and are logged here with the app version/commit
 they shipped in.
 
+- v1.2 — added swap-usd-in, swap-usd-out, pool-tvl, liq-position-value
 - v1.1 — added token-option, token-import-confirm, swap-max, settings-reset
 - **v1 — initial catalog** (2026-07-15). The full set of selectors listed
   above, covering the swap page, pools list, and pool detail page — the

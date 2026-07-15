@@ -161,6 +161,35 @@ exactly as above based on whether `path[0]`/`path[path.length - 1]` is
 `weth` and you're sending/receiving native ETH. HPPYSwap caps this at one
 intermediate hop (2 legs) — it doesn't chain further route bases together.
 
+## Deriving USD prices
+
+HPPYSwap has no external price feed — every USD figure the web app shows
+(the swap page's `~$…` lines, pool TVL, position value) comes straight from
+the DEX's own reserves, anchored to `USD_ANCHOR` (USDC.e, treated as $1).
+`midPriceE18(reserveBase, reserveQuote, decimalsBase, decimalsQuote)`
+(`@hppyswap/sdk`, `packages/sdk/src/math.ts`) turns a pair's reserves into
+the spot price of 1 whole `base` token in `quote` units, as an 1e18
+fixed-point bigint, decimals-normalized so USDC.e's 6 decimals and WETH's 18
+don't skew the result. When a token has no direct USDC.e pool, bridge
+through WETH the same way the router's 2-hop routing does, scaling the two
+1e18 prices back down after multiplying them together:
+
+```ts
+import { ADDRESSES, USD_ANCHOR, midPriceE18 } from "@hppyswap/sdk";
+
+// Direct: token/USDC.e pool exists.
+const priceE18 = midPriceE18(reserveToken, reserveUsdcE, token.decimals, USD_ANCHOR.decimals);
+
+// No direct pool: bridge through WETH (token/WETH × WETH/USDC.e).
+const tokenInWethE18 = midPriceE18(reserveTokenInHop, reserveWethInHop, token.decimals, 18);
+const wethInUsdcE18 = midPriceE18(reserveWeth, reserveUsdcE, 18, USD_ANCHOR.decimals);
+const bridgedPriceE18 = (tokenInWethE18 * wethInUsdcE18) / 10n ** 18n;
+```
+
+A pool with a zero reserve on either side throws `INSUFFICIENT_LIQUIDITY`
+rather than returning a price — treat that the same as "no price known",
+same as when neither the direct nor the WETH-bridged pool exists at all.
+
 ## Liquidity
 
 `addLiquidity` / `addLiquidityETH` and `removeLiquidity` /
