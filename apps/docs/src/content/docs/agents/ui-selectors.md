@@ -1,0 +1,114 @@
+---
+title: UI selector catalog
+description: The full data-agent selector contract for the HPPYSwap web app, for agents driving the UI directly.
+---
+
+Every interactive element in the HPPYSwap web app (`hppy.ai`) carries a
+stable `data-agent="…"` attribute. This is the contract an agent driving
+the UI via browser automation relies on instead of guessing at CSS classes
+or visible text (which can change for purely cosmetic reasons).
+
+## The contract
+
+- **Coverage.** Every button, input, and state-bearing element a person
+  needs to complete a swap or manage liquidity has a `data-agent` selector.
+  Purely decorative elements do not.
+- **Stability.** `data-agent` values are a versioned contract, not an
+  implementation detail. **A selector rename, removal, or semantic change
+  is a breaking change** and must be recorded in the [changelog](#changelog)
+  below, in the same pull request that makes the change.
+- **Semantic HTML only.** Every selector is on a real `<button>`,
+  `<input>`, `<table>`, or similar — never a `<div onClick>` masquerading
+  as one. Percent-preset controls (`liq-remove-percent`) are real
+  `<button>` elements, not a slider or drag control.
+- **State via DOM text, not visual state.** Status and error messages are
+  exposed as the `textContent` of an `aria-live="polite"` `role="status"`
+  region — never a spinner-only or color-only state. An agent reading
+  `[data-agent="swap-status"]`'s text content sees exactly what a screen
+  reader user hears: `"approving token spend…"`, `"swap complete"`, a
+  specific error string, or (most of the time) empty text when there's
+  nothing to report. The price-impact warning follows the same rule: above
+  5% impact, `[data-agent="swap-impact"]`'s text includes a literal
+  `⚠ high impact` marker appended to the percentage — an agent doesn't need
+  to parse color or CSS classes to detect it.
+
+## Global (every page)
+
+| Selector | Element | Purpose |
+|---|---|---|
+| `nav-home` | Logo link (`><` mark + "hppyswap") | Navigate to `/` |
+| `nav-swap` | "swap" nav link | Navigate to `/` |
+| `nav-pools` | "pools" nav link | Navigate to `/pools` |
+| `nav-docs` | "docs" nav link (external) | Opens `docs.hppy.ai` in a new tab |
+| `theme-toggle` | Light/dark toggle button | Toggles `--theme`, persisted to `localStorage` |
+| `status-line` | Default status region (`role="status"`, `aria-live="polite"`) | Fallback selector on the shared `StatusLine` component; each page below overrides it with a page-specific name (`swap-status`, `pools-status`, `liq-status`) — treat those as the concrete selectors, this as the underlying pattern |
+| `wallet-connect` | "connect ▾" button | Shown when disconnected; opens the connector picker |
+| `wallet-switch-chain` | "switch to hpp" button | Shown when connected to the wrong chain |
+| `wallet-disconnect` | "disconnect" button | Shown when connected to HPP Mainnet, next to the truncated address |
+
+## Swap (`/`)
+
+| Selector | Element | Purpose |
+|---|---|---|
+| `swap-amount-in` | Sell amount `<input>` | Type the amount to sell |
+| `swap-amount-out` | Buy amount `<input>` (read-only) | Shows the live router quote for the sell amount |
+| `swap-token-in` | Sell token select trigger | Opens the token picker for the sell side |
+| `swap-token-out` | Buy token select trigger | Opens the token picker for the buy side |
+| `swap-direction-flip` | "↓" button | Swaps sell/buy tokens and clears the amount |
+| `swap-quote-line` | Quote row container | Text: `1 TOKEN_IN = X TOKEN_OUT` |
+| `swap-impact` | Price impact value text | Percentage; includes `⚠ high impact` in its text above 5% |
+| `swap-route` | Route row container | Text: `direct (TOKEN_IN/TOKEN_OUT)` — no multi-hop in MVP |
+| `swap-execute` | Execute button | Label toggles to "confirm high impact" above 15% impact (click twice) |
+| `swap-status` | `aria-live` status region | Approve/pending/success/error text; see [the contract](#the-contract) |
+| `settings-trigger` | "slippage X% ⚙" button | Opens the slippage/deadline/RPC settings panel |
+| `settings-slippage` | Slippage tolerance `<input>` (bps) | Basis points, e.g. `50` = 0.5%. Default 50 |
+| `settings-deadline` | Deadline `<input>` (minutes) | Minutes from now. Default 20 |
+| `settings-rpc` | Custom RPC URL `<input>` | Overrides the public RPC; requires a page reload to take effect |
+
+## Pools (`/pools`)
+
+| Selector | Element | Purpose |
+|---|---|---|
+| `pools-table` | `<table>` of all pools | Columns: pair, reserves |
+| `pool-row` | `<tr>` per pool | Also carries `data-pair="0x…"` — the pair contract address; click navigates to `/pools/:pairAddress` |
+| `pools-create` | "+ create pool" link | Navigates to `/pools/new` |
+| `pools-limit-note` | "showing first N of M pools" text | Only present when the factory has more pairs than the list's 50-row limit |
+| `pools-status` | `aria-live` status region | "no pools yet…", "loading pools…", or the not-deployed message |
+
+## Pool detail (`/pools/:pairAddress`, `/pools/new`)
+
+| Selector | Element | Purpose |
+|---|---|---|
+| `liq-token-a` | Token A select trigger | `/pools/new` only — picks the first token of a brand-new pair |
+| `liq-token-b` | Token B select trigger | `/pools/new` only — picks the second token |
+| `liq-amount-a` | Deposit amount A `<input>` | For an existing pool, typing here auto-derives amount B from the reserve ratio |
+| `liq-amount-b` | Deposit amount B `<input>` | Same, deriving amount A |
+| `liq-add-execute` | "add liquidity ↵" button | Submits the add-liquidity transaction (with approvals as needed) |
+| `liq-lp-balance` | "my LP … (X% share)" text | Only on an existing pool, when connected |
+| `liq-reserves` | "reserves: …" text | Only on an existing pool |
+| `liq-initial-price-note` | "you are setting the initial price for this pool." text | Only shown for a brand-new pool (no existing ratio to match) |
+| `liq-remove-percent-group` | Container `<div>` for the 4 percent buttons | Groups the preset buttons below |
+| `liq-remove-percent` | Percent preset `<button>` ×4 | Real buttons, each with `data-percent="25"` / `"50"` / `"75"` / `"100"` |
+| `liq-remove-amount` | "X LP" / "select a percent" text | Reflects the currently selected percent's LP amount |
+| `liq-remove-execute` | "remove liquidity ↵" button | Submits the remove-liquidity transaction |
+| `liq-status` | `aria-live` status region | Loading/approve/pending/success/error/not-found text |
+
+## Derived selectors: token import
+
+Every token-select trigger listed above (`swap-token-in`, `swap-token-out`,
+`liq-token-a`, `liq-token-b`) opens the same picker component, which
+additionally exposes an "import by address" text `<input>` at
+`{selector}-import` — e.g. `swap-token-in-import`. Typing a valid ERC-20
+contract address there and confirming pulls its symbol/decimals live from
+the chain and adds it to the picker.
+
+## Changelog
+
+Selector additions are backward compatible; renames, removals, or
+behavior changes are not and are logged here with the app version/commit
+they shipped in.
+
+- **v1 — initial catalog** (2026-07-15). The full set of selectors listed
+  above, covering the swap page, pools list, and pool detail page — the
+  first published version of this contract, matching the web app as
+  implemented through the swap/pools/liquidity features.

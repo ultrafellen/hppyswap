@@ -7,3 +7,5 @@ allowBuilds:
   workerd: false
 minimumReleaseAgeExclude:
   - viem@2.55.2
+  - miniflare@4.20260710.0
+  - wrangler@4.111.0
