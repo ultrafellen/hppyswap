@@ -11,17 +11,18 @@ will behave identically to a human clicking through the UI.
 
 ## Before you start: check deployment status
 
-Contract addresses are zero until HPPYSwap is deployed on HPP Mainnet.
-Always check `isDeployed()` (or the manifest's `"deployed"` field) before
-attempting any of the calls below:
+HPPYSwap is deployed on HPP Mainnet — see [Contracts](/dev/contracts/) for
+the live addresses. Still check `isDeployed()` (or the manifest's
+`"deployed"` field) before attempting any of the calls below; it's a cheap
+guard against a stale build or a future redeploy to a new chain:
 
 ```ts
 import { isDeployed, ADDRESSES } from "@hppyswap/sdk";
 
 if (!isDeployed()) {
-  throw new Error("HPPYSwap is not deployed on HPP Mainnet yet");
+  throw new Error("HPPYSwap is not deployed on this chain yet");
 }
-// ADDRESSES.factory / ADDRESSES.router / ADDRESSES.weth are now real addresses
+// ADDRESSES.factory / ADDRESSES.router / ADDRESSES.weth are real addresses
 ```
 
 An agent without access to `@hppyswap/sdk` can get the same information

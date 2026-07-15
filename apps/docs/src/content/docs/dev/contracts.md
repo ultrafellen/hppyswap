@@ -5,25 +5,26 @@ description: Deployed addresses, ABI locations, and fork notes for the HPPYSwap 
 
 ## Deployment status
 
-**Not deployed yet.** HPPYSwap's contracts on HPP Mainnet are deployed once,
+**Deployed on HPP Mainnet.** HPPYSwap's contracts were deployed once,
 locally, by a human running `forge script` (never via CI — see
-[Local development](/dev/local-development/)). Until that happens, every
-address below is the zero address and the app's `isDeployed()` helper
-returns `false`, which disables the swap and liquidity forms in the UI.
+[Local development](/dev/local-development/)), then verified on-chain. The
+app's `isDeployed()` helper now returns `true`, enabling the swap and
+liquidity forms in the UI.
 
-**Addresses will be published here** the moment deployment happens. The
-source of truth is `packages/sdk/src/deployments.json`, keyed by chain ID
-(`190415` for HPP Mainnet) — this page and the
+The source of truth is `packages/sdk/src/deployments.json`, keyed by chain
+ID (`190415` for HPP Mainnet) — this page and the
 [agent manifest](/agents/hppyswap.json) both read from it indirectly (this
 page is updated by hand alongside the deployment; the manifest reads it at
 build time via `@hppyswap/sdk`).
 
 | Contract | Address | Notes |
 |---|---|---|
-| `UniswapV2Factory` | `0x0000…0000` (placeholder) | Creates and indexes pairs |
-| `UniswapV2Router02` | `0x0000…0000` (placeholder) | Swap / add-liquidity / remove-liquidity entry point |
-| `WETH9` | `0x0000…0000` (placeholder) | Only deployed if HPP Mainnet has no canonical WETH already |
-| `Multicall3` | `0xcA11bde05977b3631167028862bE2a173976CA11` | Canonical CREATE2 address, assumed pre-deployed on HPP; batches read calls |
+| `UniswapV2Factory` | [`0xf799BF70CEb51e26efa1d9744BE617Bab7b88e41`](https://explorer.hpp.io/address/0xf799BF70CEb51e26efa1d9744BE617Bab7b88e41) | Creates and indexes pairs |
+| `UniswapV2Router02` | [`0x661aA4D2B0e3348125DEe6E75A28aD8E1e66f8a7`](https://explorer.hpp.io/address/0x661aA4D2B0e3348125DEe6E75A28aD8E1e66f8a7) | Swap / add-liquidity / remove-liquidity entry point |
+| `WETH9` | [`0x82553CDA0bEd9262a879F9F7524cd20288B357AA`](https://explorer.hpp.io/address/0x82553CDA0bEd9262a879F9F7524cd20288B357AA) | Canonical WETH, pre-existing on HPP Mainnet — not deployed by this repo |
+| `Multicall3` | [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://explorer.hpp.io/address/0xcA11bde05977b3631167028862bE2a173976CA11) | Canonical CREATE2 address, pre-deployed on HPP; batches read calls |
+
+Init code hash (see below): `0x5800ffe4b53beb540183bd1f16bf7fa0957897af8ffe1266f1a1c30ea0b58b72`
 
 ## Init code hash
 
