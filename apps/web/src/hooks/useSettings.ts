@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useCallback, useState } from "react";
-import { DEFAULT_SETTINGS, loadSettings, saveSettings } from "../config/settings";
+import { useCallback, useSyncExternalStore } from "react";
+import { getSnapshot, resetSettingsStore, setSettingsStore, subscribe } from "../config/settingsStore";
 import type { Settings } from "../config/settings";
 
 export type { Settings };
@@ -12,25 +12,22 @@ export type UseSettingsReturn = {
 };
 
 /**
- * React-facing wrapper around the localStorage-backed settings module.
- * Reads once on mount and persists every update.
+ * React-facing wrapper around the module-level settings store
+ * (config/settingsStore.ts). Every component that calls useSettings()
+ * subscribes to the same underlying value via useSyncExternalStore, so a
+ * change made in one place (e.g. SettingsPopover) is immediately visible
+ * everywhere else settings are read (e.g. useSwap, useLiquidity) — no
+ * separate per-instance copy, no waiting for a remount.
  */
 export function useSettings(): UseSettingsReturn {
-  const [settings, setSettingsState] = useState<Settings>(() => loadSettings());
+  const settings = useSyncExternalStore(subscribe, getSnapshot);
 
   const setSettings = useCallback((next: Settings | ((prev: Settings) => Settings)) => {
-    // Resolve the next value and persist it outside the state updater. The
-    // updater passed to setState can be invoked more than once per update
-    // (e.g. React StrictMode's double-invoke in development), so any side
-    // effect like saveSettings must not live inside it.
-    const resolved = typeof next === "function" ? (next as (prev: Settings) => Settings)(settings) : next;
-    saveSettings(resolved);
-    setSettingsState(resolved);
-  }, [settings]);
+    setSettingsStore(next);
+  }, []);
 
   const resetSettings = useCallback(() => {
-    saveSettings(DEFAULT_SETTINGS);
-    setSettingsState(DEFAULT_SETTINGS);
+    resetSettingsStore();
   }, []);
 
   return { settings, setSettings, resetSettings };

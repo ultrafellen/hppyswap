@@ -4,9 +4,10 @@ import { useSettings } from "../hooks/useSettings";
 
 /**
  * Trigger + popover for slippage/deadline/RPC settings, persisted via
- * useSettings. Each field's onChange calls setSettings exactly once (never
- * batched — useSettings resolves the next value from its own closure, so
- * two calls in one handler would clobber each other).
+ * useSettings. Each field's onChange calls setSettings exactly once per
+ * event; setSettings resolves against the settings store's current value
+ * (config/settingsStore.ts) rather than a render closure, and every other
+ * useSettings() consumer (e.g. useSwap) sees the update immediately.
  */
 export function SettingsPopover() {
   const { settings, setSettings, resetSettings } = useSettings();

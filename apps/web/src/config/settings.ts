@@ -5,8 +5,42 @@ export type Settings = { slippageBps: number; deadlineMinutes: number; rpcUrl: s
 
 export const DEFAULT_SETTINGS: Settings = { slippageBps: 50, deadlineMinutes: 20, rpcUrl: null };
 
+const MAX_SLIPPAGE_BPS = 5000;
+const MIN_DEADLINE_MINUTES = 1;
+const MAX_DEADLINE_MINUTES = 4320; // 3 days
+
+// A hand-edited (or stale-schema) localStorage entry can contain anything —
+// wrong types, out-of-range numbers, or a garbage rpcUrl. Every field is
+// validated independently so one bad field doesn't discard the rest, and so
+// a bad value can never reach call sites that assume it's safe (e.g.
+// `BigInt(... + settings.deadlineMinutes * 60)` in useSwap, which throws on
+// a non-finite/non-integer input).
+function sanitizeSlippageBps(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value)) return DEFAULT_SETTINGS.slippageBps;
+  return Math.min(MAX_SLIPPAGE_BPS, Math.max(0, value));
+}
+
+function sanitizeDeadlineMinutes(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value)) return DEFAULT_SETTINGS.deadlineMinutes;
+  return Math.min(MAX_DEADLINE_MINUTES, Math.max(MIN_DEADLINE_MINUTES, value));
+}
+
+function sanitizeRpcUrl(value: unknown): string | null {
+  if (typeof value !== "string" || value.length === 0) return null;
+  return /^https?:\/\//.test(value) ? value : null;
+}
+
+function sanitizeSettings(raw: unknown): Settings {
+  const obj = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  return {
+    slippageBps: sanitizeSlippageBps(obj.slippageBps),
+    deadlineMinutes: sanitizeDeadlineMinutes(obj.deadlineMinutes),
+    rpcUrl: sanitizeRpcUrl(obj.rpcUrl),
+  };
+}
+
 export function loadSettings(): Settings {
-  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(KEY) ?? "{}") }; }
+  try { return sanitizeSettings(JSON.parse(localStorage.getItem(KEY) ?? "{}")); }
   catch { return DEFAULT_SETTINGS; }
 }
 

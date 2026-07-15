@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS, getStoredRpcUrl, loadSettings, saveSettings } from "../src/config/settings";
+import { getSnapshot, resetSettingsStore, setSettingsStore, subscribe } from "../src/config/settingsStore";
 
 // Minimal in-memory Storage stub — this test runs under vitest's node
 // environment, which has no browser localStorage, so we provide just
@@ -42,5 +43,109 @@ describe("settings round-trip", () => {
     expect(loaded.slippageBps).toBe(100);
     expect(loaded.deadlineMinutes).toBe(20);
     expect(loaded.rpcUrl).toBeNull();
+  });
+});
+
+describe("settings validation", () => {
+  it("clamps an out-of-range slippageBps into [0, 5000]", () => {
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ slippageBps: 9999 }));
+    expect(loadSettings().slippageBps).toBe(5000);
+
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ slippageBps: -10 }));
+    expect(loadSettings().slippageBps).toBe(0);
+  });
+
+  it("falls back to the default slippageBps for a non-integer or wrong-typed value", () => {
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ slippageBps: "abc" }));
+    expect(loadSettings().slippageBps).toBe(DEFAULT_SETTINGS.slippageBps);
+
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ slippageBps: 12.5 }));
+    expect(loadSettings().slippageBps).toBe(DEFAULT_SETTINGS.slippageBps);
+  });
+
+  it("clamps an out-of-range deadlineMinutes into [1, 4320]", () => {
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ deadlineMinutes: 999999 }));
+    expect(loadSettings().deadlineMinutes).toBe(4320);
+
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ deadlineMinutes: 0 }));
+    expect(loadSettings().deadlineMinutes).toBe(1);
+  });
+
+  it("falls back to the default deadlineMinutes for a non-integer or wrong-typed value", () => {
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ deadlineMinutes: "soon" }));
+    expect(loadSettings().deadlineMinutes).toBe(DEFAULT_SETTINGS.deadlineMinutes);
+  });
+
+  it("rejects an rpcUrl that isn't a non-empty http(s):// string", () => {
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ rpcUrl: "not-a-url" }));
+    expect(loadSettings().rpcUrl).toBeNull();
+
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ rpcUrl: "" }));
+    expect(loadSettings().rpcUrl).toBeNull();
+
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ rpcUrl: 12345 }));
+    expect(loadSettings().rpcUrl).toBeNull();
+  });
+
+  it("accepts a valid http(s) rpcUrl", () => {
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ rpcUrl: "http://localhost:8545" }));
+    expect(loadSettings().rpcUrl).toBe("http://localhost:8545");
+
+    localStorage.setItem("hppyswap.settings.v1", JSON.stringify({ rpcUrl: "https://custom.rpc" }));
+    expect(loadSettings().rpcUrl).toBe("https://custom.rpc");
+  });
+});
+
+describe("settings store", () => {
+  beforeEach(() => {
+    resetSettingsStore();
+  });
+
+  it("gives two independent subscribers the same value after setSettingsStore", () => {
+    let seenByA: ReturnType<typeof getSnapshot> | null = null;
+    let seenByB: ReturnType<typeof getSnapshot> | null = null;
+    const unsubA = subscribe(() => { seenByA = getSnapshot(); });
+    const unsubB = subscribe(() => { seenByB = getSnapshot(); });
+
+    setSettingsStore({ slippageBps: 200, deadlineMinutes: 15, rpcUrl: null });
+
+    expect(seenByA).toEqual({ slippageBps: 200, deadlineMinutes: 15, rpcUrl: null });
+    expect(seenByB).toEqual({ slippageBps: 200, deadlineMinutes: 15, rpcUrl: null });
+    expect(getSnapshot()).toEqual({ slippageBps: 200, deadlineMinutes: 15, rpcUrl: null });
+
+    unsubA();
+    unsubB();
+  });
+
+  it("stops notifying a subscriber after it unsubscribes", () => {
+    let notifications = 0;
+    const unsubscribe = subscribe(() => { notifications += 1; });
+    unsubscribe();
+
+    setSettingsStore({ slippageBps: 123, deadlineMinutes: 5, rpcUrl: null });
+
+    expect(notifications).toBe(0);
+  });
+
+  it("resolves a functional update against the store's current value, not a stale closure", () => {
+    // Two functional updates issued back to back (e.g. two edits dispatched
+    // in the same tick) must both apply — this is exactly the stale-closure
+    // hazard the old per-instance useState implementation had.
+    setSettingsStore((prev) => ({ ...prev, slippageBps: prev.slippageBps + 10 }));
+    setSettingsStore((prev) => ({ ...prev, slippageBps: prev.slippageBps + 10 }));
+
+    expect(getSnapshot().slippageBps).toBe(DEFAULT_SETTINGS.slippageBps + 20);
+  });
+
+  it("resetSettingsStore restores defaults and notifies subscribers", () => {
+    setSettingsStore({ slippageBps: 999, deadlineMinutes: 999, rpcUrl: "https://x" });
+    let notified = false;
+    const unsubscribe = subscribe(() => { notified = true; });
+
+    resetSettingsStore();
+
+    expect(getSnapshot()).toEqual(DEFAULT_SETTINGS);
+    expect(notified).toBe(true);
+    unsubscribe();
   });
 });
