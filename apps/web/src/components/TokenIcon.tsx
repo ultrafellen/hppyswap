@@ -16,7 +16,16 @@ export type TokenIconProps = {
  */
 export function TokenIcon({ symbol, logoURI }: TokenIconProps) {
   if (logoURI) {
-    return <img className="token-icon" src={logoURI} alt="" aria-hidden="true" width={20} height={20} />;
+    return (
+      <img
+        className="token-icon token-icon-img"
+        src={logoURI}
+        alt=""
+        aria-hidden="true"
+        width={20}
+        height={20}
+      />
+    );
   }
   return (
     <span className="token-icon token-icon-fallback" aria-hidden="true">

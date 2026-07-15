@@ -152,6 +152,17 @@ main { max-width: 960px; margin: 0 auto; padding: 32px 20px; min-height: 60vh; }
   width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
   object-fit: cover; vertical-align: middle;
 }
+/* Light neutral backing circle so dark token logos (e.g. HPP's) stay visible
+   on the dark theme. Hardcoded (not var(--card)) — token logos are designed
+   for a light backing regardless of app theme. box-sizing: border-box keeps
+   the border+padding inside the existing 20px footprint (no layout shift);
+   the image itself renders a bit smaller inside the ring. */
+.token-icon-img {
+  box-sizing: border-box;
+  background: #eef2f6;
+  border: 1px solid var(--card-border);
+  padding: 2px;
+}
 .token-icon-fallback {
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--card-border); color: var(--text-dim);
