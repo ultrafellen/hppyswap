@@ -1,5 +1,9 @@
 packages:
   - "apps/*"
   - "packages/*"
+allowBuilds:
+  esbuild: false
+  sharp: false
+  workerd: false
 minimumReleaseAgeExclude:
   - viem@2.55.2
