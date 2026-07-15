@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useReadContracts } from "wagmi";
 import { isAddress, type Address } from "viem";
 import { DEFAULT_TOKENS, erc20Abi, type TokenInfo } from "@hppyswap/sdk";
@@ -25,6 +25,13 @@ export function TokenSelect({ token, onSelect, dataAgent, disabled, excludeAddre
   const [customTokens, setCustomTokens] = useState<TokenInfo[]>(() => loadCustomTokens());
   const [importAddress, setImportAddress] = useState("");
 
+  // The import input (and its live ERC20 lookup) only makes sense while the
+  // picker is open; clear it on close so a stale address can't linger for
+  // the read-contracts query to pick up next time the picker reopens.
+  useEffect(() => {
+    if (!open) setImportAddress("");
+  }, [open]);
+
   const trimmedImport = importAddress.trim();
   const importIsValidAddress = isAddress(trimmedImport);
 
@@ -36,7 +43,7 @@ export function TokenSelect({ token, onSelect, dataAgent, disabled, excludeAddre
           { address: trimmedImport as Address, abi: erc20Abi, functionName: "name" },
         ]
       : [],
-    query: { enabled: importIsValidAddress },
+    query: { enabled: open && importIsValidAddress },
   });
 
   const importOk =

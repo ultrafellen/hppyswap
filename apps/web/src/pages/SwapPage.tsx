@@ -98,7 +98,15 @@ export function SwapPage() {
     setImpactConfirmed(false);
   }, [tokenIn.address, tokenOut?.address, amountInText]);
 
-  const { swap, status: swapStatus, error: swapError } = useSwap();
+  const { swap, status: swapStatus, error: swapError, reset: resetSwapStatus } = useSwap();
+
+  // A terminal swap status (success/error) shouldn't linger once the user
+  // starts editing a new swap — otherwise the aria-live region keeps
+  // announcing e.g. "swap complete" while they set up the next trade.
+  // `reset` itself guards against clobbering an in-flight approve/pending.
+  useEffect(() => {
+    resetSwapStatus();
+  }, [tokenIn.address, tokenOut?.address, amountInText]);
 
   const noPool = deployed && !!tokenOut && !pair.isLoading && pair.pairAddress === null;
 
@@ -269,7 +277,9 @@ export function SwapPage() {
             className={warnImpact ? "quote-value quote-value-warn" : "quote-value"}
             data-agent="swap-impact"
           >
-            {amountIn && amountIn > 0n ? `${(impactBps / 100).toFixed(2)}%` : "—"}
+            {amountIn && amountIn > 0n
+              ? `${(impactBps / 100).toFixed(2)}%${warnImpact ? " ⚠ high impact" : ""}`
+              : "—"}
           </span>
         </div>
         <div className="quote-row" data-agent="swap-route">

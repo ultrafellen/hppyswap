@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Address, Hex } from "viem";
 import { useConnection } from "wagmi";
 import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
@@ -22,6 +22,12 @@ export type UseSwapReturn = {
   swap: (params: SwapParams) => Promise<Hex>;
   status: SwapStatus;
   error: string | null;
+  /**
+   * Returns `status` to "idle" and clears `error`. No-op while a swap is
+   * actually in flight ("approving"/"pending") so callers (e.g. an effect
+   * that resets on input edits) can't clobber a live transaction's status.
+   */
+  reset: () => void;
 };
 
 /**
@@ -36,6 +42,14 @@ export function useSwap(): UseSwapReturn {
   const { settings } = useSettings();
   const [status, setStatus] = useState<SwapStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const statusRef = useRef(status);
+  statusRef.current = status;
+
+  const reset = useCallback(() => {
+    if (statusRef.current === "approving" || statusRef.current === "pending") return;
+    setStatus("idle");
+    setError(null);
+  }, []);
 
   const swap = useCallback(
     async ({ tokenIn, tokenOut, amountIn, quotedOut }: SwapParams): Promise<Hex> => {
@@ -65,7 +79,8 @@ export function useSwap(): UseSwapReturn {
               functionName: "approve",
               args: [ADDRESSES.router, amountIn],
             });
-            await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
+            const approveReceipt = await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
+            if (approveReceipt.status !== "success") throw new Error("approval transaction reverted");
           }
         }
 
@@ -109,5 +124,5 @@ export function useSwap(): UseSwapReturn {
     [owner, settings.slippageBps, settings.deadlineMinutes],
   );
 
-  return { swap, status, error };
+  return { swap, status, error, reset };
 }
