@@ -4,8 +4,10 @@ import { Link, useNavigate, type NavigateFunction } from "react-router";
 import { ADDRESSES, factoryAbi, isDeployed } from "@hppyswap/sdk";
 import { useReadContract } from "wagmi";
 import { StatusLine } from "../components/StatusLine";
+import { TokenIcon } from "../components/TokenIcon";
 import { usePools, type PoolRow } from "../hooks/usePools";
 import { formatAmount } from "../lib/format";
+import { resolveTokenLogo } from "../lib/tokenIcons";
 
 const POOLS_LIMIT = 50;
 
@@ -27,6 +29,10 @@ function PoolTableRow({ pool, navigate }: { pool: PoolRow; navigate: NavigateFun
     <tr className="pool-row" data-agent="pool-row" data-pair={pool.pair} onClick={handleRowClick}>
       <td className="pool-pair-cell">
         <Link to={to} state={{ pool }} className="pool-pair-link">
+          <span className="pool-pair-icons">
+            <TokenIcon symbol={pool.token0.symbol} logoURI={resolveTokenLogo(pool.token0.address)} />
+            <TokenIcon symbol={pool.token1.symbol} logoURI={resolveTokenLogo(pool.token1.address)} />
+          </span>
           {pool.token0.symbol}/{pool.token1.symbol}
         </Link>
       </td>

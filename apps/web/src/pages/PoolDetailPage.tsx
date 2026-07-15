@@ -6,12 +6,14 @@ import { isAddress, type Address } from "viem";
 import { DEFAULT_TOKENS, erc20Abi, isDeployed, pairAbi, type TokenInfo } from "@hppyswap/sdk";
 import { AmountInput } from "../components/AmountInput";
 import { TokenSelect } from "../components/TokenSelect";
+import { TokenIcon } from "../components/TokenIcon";
 import { StatusLine, type StatusTone } from "../components/StatusLine";
 import { usePair } from "../hooks/usePair";
 import { useLiquidity } from "../hooks/useLiquidity";
 import type { PoolRow, TokenMeta } from "../hooks/usePools";
 import { buildPoolRows } from "../lib/pools";
 import { formatAmount, parseAmount, toPlainAmount } from "../lib/format";
+import { resolveTokenLogo } from "../lib/tokenIcons";
 import { computeSharePercent, deriveSecondAmount, lpAmountForPercent } from "../lib/liquidity";
 
 const PERCENT_PRESETS = [25, 50, 75, 100] as const;
@@ -297,11 +299,20 @@ export function PoolDetailPage() {
     <div className="pool-detail-page">
       <div className="swap-header-line">
         <span className="swap-comment">
-          {isNewRoute
-            ? "// create a new pool"
-            : displayPool
-              ? `// ${displayPool.token0.symbol}/${displayPool.token1.symbol} pool`
-              : "// pool detail"}
+          {isNewRoute ? (
+            "// create a new pool"
+          ) : displayPool ? (
+            <>
+              {"// "}
+              <span className="pool-pair-icons">
+                <TokenIcon symbol={displayPool.token0.symbol} logoURI={resolveTokenLogo(displayPool.token0.address)} />
+                <TokenIcon symbol={displayPool.token1.symbol} logoURI={resolveTokenLogo(displayPool.token1.address)} />
+              </span>
+              {`${displayPool.token0.symbol}/${displayPool.token1.symbol} pool`}
+            </>
+          ) : (
+            "// pool detail"
+          )}
         </span>
         <Link to="/pools" className="pools-create">
           ← back to pools

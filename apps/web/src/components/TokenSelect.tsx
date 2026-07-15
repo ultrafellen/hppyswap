@@ -4,6 +4,7 @@ import { useReadContracts } from "wagmi";
 import { isAddress, type Address } from "viem";
 import { DEFAULT_TOKENS, erc20Abi, type TokenInfo } from "@hppyswap/sdk";
 import { addCustomToken, loadCustomTokens } from "../lib/customTokens";
+import { TokenIcon } from "./TokenIcon";
 
 export type TokenSelectProps = {
   token: TokenInfo | null;
@@ -102,7 +103,9 @@ export function TokenSelect({ token, onSelect, dataAgent, disabled, excludeAddre
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        {token ? token.symbol : "select token"} ▾
+        {token && <TokenIcon symbol={token.symbol} logoURI={token.logoURI} />}
+        <span>{token ? token.symbol : "select token"}</span>
+        <span aria-hidden="true">▾</span>
       </button>
       {open && (
         <div className="token-select-panel" role="group" aria-label="select token">
@@ -115,7 +118,10 @@ export function TokenSelect({ token, onSelect, dataAgent, disabled, excludeAddre
                   data-address={t.address}
                   onClick={() => handleSelect(t)}
                 >
-                  {t.symbol} — {t.name}
+                  <TokenIcon symbol={t.symbol} logoURI={t.logoURI} />
+                  <span>
+                    {t.symbol} — {t.name}
+                  </span>
                 </button>
               </li>
             ))}

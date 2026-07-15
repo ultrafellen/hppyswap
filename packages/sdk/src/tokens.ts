@@ -4,16 +4,28 @@ import { ADDRESSES } from "./addresses";
 
 export type TokenInfo = {
   address: Address; symbol: string; name: string; decimals: number; isNative?: boolean;
+  /**
+   * Root-relative path to a 64x64 icon (Task 18), e.g. "/tokens/eth.png".
+   * Served from `apps/web/public/tokens/` — resolve against the web app's
+   * origin (`https://hppy.ai`) when consuming this outside that app (e.g.
+   * from the agent manifest). Self-hosted, not hotlinked, so this never
+   * points at a third-party CDN. Absent for custom-imported tokens, which
+   * have no known icon.
+   */
+  logoURI?: string;
 };
 export const NATIVE_ETH: TokenInfo = {
   address: ADDRESSES.weth, symbol: "ETH", name: "Ether", decimals: 18, isNative: true,
+  logoURI: "/tokens/eth.png",
 };
 // Addresses verified on-chain 2026-07-15 (Task 16 mainnet deployment) via cast.
 export const HPP: TokenInfo = {
   address: "0xB48334E7938367bC24Fe1F19000D6f06C622E6c7", symbol: "HPP", name: "HousePartyProtocol", decimals: 18,
+  logoURI: "/tokens/hpp.png",
 };
 export const USDC_E: TokenInfo = {
   address: "0x401eCb1D350407f13ba348573E5630B83638E30D", symbol: "USDC.e", name: "Bridged USDC", decimals: 6,
+  logoURI: "/tokens/usdce.png",
 };
 export const DEFAULT_TOKENS: TokenInfo[] = [NATIVE_ETH, HPP, USDC_E];
 /**
