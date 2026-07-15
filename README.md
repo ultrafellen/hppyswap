@@ -67,7 +67,7 @@ exposed as `aria-live` DOM text, not a spinner or a color.
 ## Development
 
 ```bash
-pnpm -r typecheck   # tsc --noEmit / astro check, per workspace
+pnpm -r typecheck   # tsc --noEmit, per workspace (docs included — a scoped tsc pass, not `astro check`)
 pnpm -r test        # vitest run, per workspace
 pnpm -r build       # tsc + vite build / astro build / tsc --noEmit
 

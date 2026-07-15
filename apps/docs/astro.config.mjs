@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";

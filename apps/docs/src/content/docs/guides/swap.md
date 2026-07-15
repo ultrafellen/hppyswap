@@ -29,8 +29,9 @@ terminal-styled single card.
 4. **Pick the token you're buying** the same way in the `> buy` row. That
    field is read-only — it always shows the router's live quote for your
    sell amount, not something you type into. Use the **↓** flip button
-   between the two rows to swap the sell/buy sides (and their amounts)
-   instantly.
+   between the two rows to swap the sell/buy sides instantly — it clears
+   the amount field rather than carrying it over, since a quote for the
+   old pair rarely makes sense for the new one.
 
 5. **Read the quote block** below the card, a three-line dot-leader
    readout:

@@ -2,8 +2,9 @@
 
 Smart contracts for HPPYSwap, an AMM DEX on HPP Mainnet. This package vendors
 Uniswap V2 (core, periphery, WETH9) via [Foundry](https://book.getfoundry.sh/),
-with the Solidity 0.6.6-pinned periphery/core libraries left untouched and a
-Foundry-native test suite layered on top.
+with the original pinned Solidity versions left untouched (core 0.5.16,
+periphery 0.6.6, WETH9 >=0.4.22 <0.6) and a Foundry-native test suite
+layered on top.
 
 ## License
 

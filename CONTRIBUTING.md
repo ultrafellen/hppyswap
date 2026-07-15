@@ -99,10 +99,12 @@ the shipped app.
 ## Contracts
 
 `contracts/` vendors [Uniswap V2](https://github.com/Uniswap/v2-core) (core,
-periphery, WETH9) at Solidity 0.6.6. **Do not modify the vendored core or
-periphery source files** — bug fixes or behavior changes belong in new code
-layered on top (e.g. the Foundry test suite or deploy script), not in the
-vendored contracts themselves, so the fork stays auditable against upstream.
+periphery, WETH9), each pinned to its original Solidity version: core at
+0.5.16, periphery at 0.6.6, WETH9 at >=0.4.22 <0.6. **Do not modify the
+vendored core or periphery source files** — bug fixes or behavior changes
+belong in new code layered on top (e.g. the Foundry test suite or deploy
+script), not in the vendored contracts themselves, so the fork stays
+auditable against upstream.
 
 Everything under `contracts/` is GPL-3.0-or-later (see `contracts/LICENSE`
 and `contracts/README.md`), consistent with its Uniswap V2 origin — this

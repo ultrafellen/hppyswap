@@ -48,7 +48,7 @@ without a publish step.
 # JS/TS workspaces, from the repo root:
 pnpm -r build       # build every app/package (apps/web: tsc + vite build; apps/docs: astro build; sdk: tsc --noEmit)
 pnpm -r test         # run every workspace's vitest suite
-pnpm -r typecheck    # tsc --noEmit / astro check across workspaces
+pnpm -r typecheck    # tsc --noEmit across workspaces (apps/docs included — a scoped tsc pass, not `astro check`)
 
 # A single workspace, e.g. just the web app:
 pnpm --filter hppyswap-web dev
