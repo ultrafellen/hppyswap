@@ -109,7 +109,12 @@ export function TokenSelect({ token, onSelect, dataAgent, disabled, excludeAddre
           <ul className="token-list">
             {visibleTokens.map((t) => (
               <li key={t.address}>
-                <button type="button" onClick={() => handleSelect(t)}>
+                <button
+                  type="button"
+                  data-agent="token-option"
+                  data-address={t.address}
+                  onClick={() => handleSelect(t)}
+                >
                   {t.symbol} — {t.name}
                 </button>
               </li>
@@ -127,7 +132,12 @@ export function TokenSelect({ token, onSelect, dataAgent, disabled, excludeAddre
                 onChange={(e) => setImportAddress(e.target.value)}
               />
             </label>
-            <button type="button" onClick={handleImport} disabled={!importOk}>
+            <button
+              type="button"
+              data-agent="token-import-confirm"
+              onClick={handleImport}
+              disabled={!importOk}
+            >
               {isImporting ? "looking up…" : "add token"}
             </button>
             {importFailed && (

@@ -51,6 +51,7 @@ or visible text (which can change for purely cosmetic reasons).
 | Selector | Element | Purpose |
 |---|---|---|
 | `swap-amount-in` | Sell amount `<input>` | Type the amount to sell |
+| `swap-max` | "max" button | Fills the sell amount with the connected wallet's full balance of the sell token |
 | `swap-amount-out` | Buy amount `<input>` (read-only) | Shows the live router quote for the sell amount |
 | `swap-token-in` | Sell token select trigger | Opens the token picker for the sell side |
 | `swap-token-out` | Buy token select trigger | Opens the token picker for the buy side |
@@ -64,6 +65,7 @@ or visible text (which can change for purely cosmetic reasons).
 | `settings-slippage` | Slippage tolerance `<input>` (bps) | Basis points, e.g. `50` = 0.5%. Default 50 |
 | `settings-deadline` | Deadline `<input>` (minutes) | Minutes from now. Default 20 |
 | `settings-rpc` | Custom RPC URL `<input>` | Overrides the public RPC; requires a page reload to take effect |
+| `settings-reset` | "reset to defaults" button | Restores slippage/deadline/RPC to their defaults |
 
 ## Pools (`/pools`)
 
@@ -93,14 +95,18 @@ or visible text (which can change for purely cosmetic reasons).
 | `liq-remove-execute` | "remove liquidity ↵" button | Submits the remove-liquidity transaction |
 | `liq-status` | `aria-live` status region | Loading/approve/pending/success/error/not-found text |
 
-## Derived selectors: token import
+## Derived selectors: token picker
 
 Every token-select trigger listed above (`swap-token-in`, `swap-token-out`,
-`liq-token-a`, `liq-token-b`) opens the same picker component, which
-additionally exposes an "import by address" text `<input>` at
-`{selector}-import` — e.g. `swap-token-in-import`. Typing a valid ERC-20
-contract address there and confirming pulls its symbol/decimals live from
-the chain and adds it to the picker.
+`liq-token-a`, `liq-token-b`) opens the same shared `TokenSelect` picker
+component, which exposes these selectors regardless of which trigger
+opened it:
+
+| Selector | Element | Purpose |
+|---|---|---|
+| `token-option` | `<button>` per token row in the open picker's list | Also carries `data-address="0x…"` — the token's checksum-agnostic contract address. Since `token-option` itself isn't unique (one per row), disambiguate by pairing the selector with `data-address`, not by row position or visible text |
+| `{selector}-import` | "import by address" text `<input>` | Namespaced per trigger, e.g. `swap-token-in-import`. Typing a valid ERC-20 contract address here enables `token-import-confirm` |
+| `token-import-confirm` | "add token" button | Confirms the import: reads symbol/decimals live from the chain, adds the token to the picker's list, and selects it. Disabled until the typed address resolves to a valid ERC-20. Not namespaced per trigger — only one picker panel is open at a time |
 
 ## Changelog
 
@@ -108,6 +114,7 @@ Selector additions are backward compatible; renames, removals, or
 behavior changes are not and are logged here with the app version/commit
 they shipped in.
 
+- v1.1 — added token-option, token-import-confirm, swap-max, settings-reset
 - **v1 — initial catalog** (2026-07-15). The full set of selectors listed
   above, covering the swap page, pools list, and pool detail page — the
   first published version of this contract, matching the web app as

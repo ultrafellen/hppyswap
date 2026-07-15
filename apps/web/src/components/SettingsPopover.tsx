@@ -72,7 +72,12 @@ export function SettingsPopover() {
             />
           </label>
           <p className="settings-note">rpc url change requires a page reload to take effect</p>
-          <button type="button" className="settings-reset" onClick={resetSettings}>
+          <button
+            type="button"
+            className="settings-reset"
+            data-agent="settings-reset"
+            onClick={resetSettings}
+          >
             reset to defaults
           </button>
         </div>

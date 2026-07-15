@@ -6,6 +6,16 @@ import starlightLlmsTxt from "starlight-llms-txt";
 // https://astro.build/config
 export default defineConfig({
   site: "https://docs.hppy.ai",
+  // Starlight 0.41's docsSchema strips unknown frontmatter keys — a
+  // `redirect:` field on a page's frontmatter is silently dropped, so a
+  // stub `agents/index.md` with that frontmatter builds as an empty page
+  // instead of redirecting. Astro's own `redirects` config option is a
+  // real redirect: for the static output this repo builds, it emits a
+  // dist/agents/index.html with a meta-refresh (plus a Location header
+  // when served through an adapter that supports it).
+  redirects: {
+    "/agents": "/agents/overview",
+  },
   integrations: [
     starlight({
       title: "HPPYSwap Docs",

@@ -239,6 +239,7 @@ export function SwapPage() {
             <button
               type="button"
               className="max-button"
+              data-agent="swap-max"
               onClick={handleMax}
               disabled={inputsDisabled || !balance}
             >

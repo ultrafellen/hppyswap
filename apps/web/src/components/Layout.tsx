@@ -6,7 +6,9 @@ import { ConnectButton } from "./ConnectButton";
 import { applyTheme, persistTheme, readStoredTheme, toggleTheme } from "../lib/theme";
 
 const DOCS_URL = "https://docs.hppy.ai";
-const AGENTS_DOCS_URL = "https://docs.hppy.ai/agents/";
+// Points at the real page directly (belt and braces alongside the
+// astro.config.mjs `/agents` -> `/agents/overview` redirect).
+const AGENTS_DOCS_URL = "https://docs.hppy.ai/agents/overview/";
 
 function ThemeToggle() {
   // The pre-paint inline script in index.html already applied the stored
