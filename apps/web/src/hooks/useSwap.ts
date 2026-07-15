@@ -1,0 +1,113 @@
+// SPDX-License-Identifier: MIT
+import { useCallback, useState } from "react";
+import type { Address, Hex } from "viem";
+import { useConnection } from "wagmi";
+import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
+import { ADDRESSES, applySlippage, erc20Abi, isDeployed, routerAbi, type TokenInfo } from "@hppyswap/sdk";
+import { wagmiConfig } from "../config/wagmi";
+import { useSettings } from "./useSettings";
+import { humanizeError } from "../lib/errors";
+
+export type SwapStatus = "idle" | "approving" | "pending" | "success" | "error";
+
+export type SwapParams = {
+  tokenIn: TokenInfo;
+  tokenOut: TokenInfo;
+  amountIn: bigint;
+  /** Raw output amount quoted from the router's `getAmountsOut` for `amountIn` (pre-slippage). */
+  quotedOut: bigint;
+};
+
+export type UseSwapReturn = {
+  swap: (params: SwapParams) => Promise<Hex>;
+  status: SwapStatus;
+  error: string | null;
+};
+
+/**
+ * Owns the approve -> swap -> wait-for-receipt flow for the swap page.
+ * `amountOutMin`/`deadline` are derived here from the current settings
+ * (slippage bps / deadline minutes) so every caller applies them the same
+ * way. Every transition is exposed via `status` so the page can render it
+ * in the swap-status aria-live region.
+ */
+export function useSwap(): UseSwapReturn {
+  const { address: owner } = useConnection();
+  const { settings } = useSettings();
+  const [status, setStatus] = useState<SwapStatus>("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  const swap = useCallback(
+    async ({ tokenIn, tokenOut, amountIn, quotedOut }: SwapParams): Promise<Hex> => {
+      setError(null);
+      try {
+        if (!isDeployed()) throw new Error("contracts not deployed");
+        if (!owner) throw new Error("wallet not connected");
+
+        const amountOutMin = applySlippage(quotedOut, settings.slippageBps);
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + settings.deadlineMinutes * 60);
+        const path: Address[] = [tokenIn.address, tokenOut.address];
+
+        // Native ETH needs no approval; ERC20 input needs router allowance
+        // first (approve-if-short, exact amountIn — not infinite approval).
+        if (!tokenIn.isNative) {
+          const allowance = await readContract(wagmiConfig, {
+            address: tokenIn.address,
+            abi: erc20Abi,
+            functionName: "allowance",
+            args: [owner, ADDRESSES.router],
+          });
+          if (allowance < amountIn) {
+            setStatus("approving");
+            const approveHash = await writeContract(wagmiConfig, {
+              address: tokenIn.address,
+              abi: erc20Abi,
+              functionName: "approve",
+              args: [ADDRESSES.router, amountIn],
+            });
+            await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
+          }
+        }
+
+        setStatus("pending");
+        let hash: Hex;
+        if (tokenIn.isNative) {
+          hash = await writeContract(wagmiConfig, {
+            address: ADDRESSES.router,
+            abi: routerAbi,
+            functionName: "swapExactETHForTokens",
+            args: [amountOutMin, path, owner, deadline],
+            value: amountIn,
+          });
+        } else if (tokenOut.isNative) {
+          hash = await writeContract(wagmiConfig, {
+            address: ADDRESSES.router,
+            abi: routerAbi,
+            functionName: "swapExactTokensForETH",
+            args: [amountIn, amountOutMin, path, owner, deadline],
+          });
+        } else {
+          hash = await writeContract(wagmiConfig, {
+            address: ADDRESSES.router,
+            abi: routerAbi,
+            functionName: "swapExactTokensForTokens",
+            args: [amountIn, amountOutMin, path, owner, deadline],
+          });
+        }
+
+        const receipt = await waitForTransactionReceipt(wagmiConfig, { hash });
+        if (receipt.status !== "success") throw new Error("transaction reverted");
+
+        setStatus("success");
+        return hash;
+      } catch (e) {
+        setError(humanizeError(e));
+        setStatus("error");
+        throw e;
+      }
+    },
+    [owner, settings.slippageBps, settings.deadlineMinutes],
+  );
+
+  return { swap, status, error };
+}

@@ -4,6 +4,8 @@ export type StatusTone = "info" | "success" | "error";
 export type StatusLineProps = {
   message: string;
   tone: StatusTone;
+  /** Overrides the default `data-agent="status-line"` for page-specific selector catalogs (e.g. Task 9's `swap-status`). */
+  dataAgent?: string;
 };
 
 const TONE_COLOR: Record<StatusTone, string> = {
@@ -18,12 +20,12 @@ const TONE_COLOR: Record<StatusTone, string> = {
  * region is present but visually empty, so it stays available to screen
  * readers and DOM-driven agents without occupying visual attention.
  */
-export function StatusLine({ message, tone }: StatusLineProps) {
+export function StatusLine({ message, tone, dataAgent = "status-line" }: StatusLineProps) {
   return (
     <p
       role="status"
       aria-live="polite"
-      data-agent="status-line"
+      data-agent={dataAgent}
       className="status-line"
       style={{ color: TONE_COLOR[tone] }}
     >
