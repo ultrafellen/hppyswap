@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { APIRoute } from "astro";
-import { hpp, ADDRESSES, DEFAULT_TOKENS, isDeployed } from "@hppyswap/sdk";
+import { hpp, ADDRESSES, DEFAULT_TOKENS, ROUTE_BASES, isDeployed } from "@hppyswap/sdk";
 
 export const GET: APIRoute = () =>
   new Response(
@@ -20,6 +20,7 @@ export const GET: APIRoute = () =>
         deployed: isDeployed(),
         contracts: ADDRESSES,
         tokens: DEFAULT_TOKENS,
+        routeBases: ROUTE_BASES,
         uiSelectorsDoc: "https://docs.hppy.ai/agents/ui-selectors/",
       },
       null,

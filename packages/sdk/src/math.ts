@@ -26,3 +26,13 @@ export function priceImpactBps(amountIn: bigint, reserveIn: bigint, reserveOut: 
   if (midOut === 0n) return 0;
   return Number(((midOut - actual) * 10000n) / midOut);
 }
+/**
+ * Combines per-hop price impact (bps) across a multi-hop route into one
+ * overall figure: `10000 * (1 - Π(1 - iₖ/10000))`, not a plain sum — losses
+ * compound multiplicatively hop over hop, same as the underlying constant-
+ * product math. An empty list (no hops) has no impact.
+ */
+export function combineImpactBps(impacts: number[]): number {
+  const remaining = impacts.reduce((acc, bps) => acc * (1 - bps / 10000), 1);
+  return Math.round(10000 * (1 - remaining));
+}

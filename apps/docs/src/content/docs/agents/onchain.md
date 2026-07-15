@@ -130,6 +130,37 @@ If either leg of the trade is native ETH, use `swapExactETHForTokens`
 list, or read `apps/web/src/hooks/useSwap.ts` in the repository for the
 exact branching logic the web app uses.
 
+### Multi-hop paths
+
+Not every token pair has a direct pool — `path` isn't limited to two
+addresses. When there's no direct pair, the web app tries a 2-hop route
+through each of `ROUTE_BASES` (exported from `@hppyswap/sdk`; currently
+`[weth, USDC.e]`), quoting every candidate's `getAmountsOut` and keeping
+whichever quotes highest (direct wins ties). An agent can do the same by
+hand — e.g. ETH has no direct pool with HPP, but ETH/USDC.e and USDC.e/HPP
+both do, so:
+
+```ts
+import { ROUTE_BASES } from "@hppyswap/sdk";
+
+const path = [wethAddress, usdcEAddress, hppAddress] as const; // 2-hop
+const amounts = await publicClient.readContract({
+  address: ADDRESSES.router,
+  abi: routerAbi,
+  functionName: "getAmountsOut",
+  args: [amountIn, path],
+});
+const quotedOut = amounts[amounts.length - 1]; // final leg's output
+```
+
+The rest of the flow (allowance check, `amountOutMin`, deadline, the
+swap call itself) is unchanged — the router pulls `amountIn` of `path[0]`
+and delivers `path[path.length - 1]` at the far end regardless of how many
+hops are in between; `swapExactETHForTokens`/`swapExactTokensForETH` apply
+exactly as above based on whether `path[0]`/`path[path.length - 1]` is
+`weth` and you're sending/receiving native ETH. HPPYSwap caps this at one
+intermediate hop (2 legs) — it doesn't chain further route bases together.
+
 ## Liquidity
 
 `addLiquidity` / `addLiquidityETH` and `removeLiquidity` /

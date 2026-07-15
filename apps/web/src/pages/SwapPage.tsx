@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { useEffect, useMemo, useState } from "react";
-import { useBalance, useConnection, useReadContract } from "wagmi";
-import type { Address } from "viem";
+import { useBalance, useConnection, useReadContract, useReadContracts } from "wagmi";
 import {
   ADDRESSES,
   DEFAULT_TOKENS,
+  ROUTE_BASES,
+  combineImpactBps,
   erc20Abi,
   getAmountOut,
   hpp,
@@ -20,6 +21,7 @@ import { StatusLine, type StatusTone } from "../components/StatusLine";
 import { usePair } from "../hooks/usePair";
 import { useSwap } from "../hooks/useSwap";
 import { formatAmount, parseAmount, toPlainAmount } from "../lib/format";
+import { buildCandidatePaths, pickBestRoute, type RouteBase } from "../lib/routing";
 
 const HIGH_IMPACT_BPS = 1500;
 const WARN_IMPACT_BPS = 500;
@@ -27,6 +29,19 @@ const WARN_IMPACT_BPS = 500;
 // "route" (5/6/5 chars) all land on the same column — matches the approved
 // composite mockup (e.g. "quote ....... 1 ETH = ...").
 const DOT_LEADER_WIDTH = 12;
+
+// Route bases, resolved to a display symbol from DEFAULT_TOKENS (module
+// scope: ROUTE_BASES never changes at runtime, so this — and the number of
+// usePair calls it drives below — is computed once, not per render).
+// Exactly 2 entries by design (packages/sdk/src/tokens.ts); the two hop
+// reads below are unrolled rather than mapped so the useSwap-page's hook
+// call count stays static across renders (rules-of-hooks).
+const ROUTE_BASE_TOKENS: RouteBase[] = ROUTE_BASES.map((address) => ({
+  address,
+  symbol: DEFAULT_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase())?.symbol ?? address,
+}));
+const ROUTE_BASE_0 = ROUTE_BASE_TOKENS[0];
+const ROUTE_BASE_1 = ROUTE_BASE_TOKENS[1];
 
 function dotLeader(label: string): string {
   return `${label} ${".".repeat(Math.max(1, DOT_LEADER_WIDTH - label.length))}`;
@@ -46,24 +61,64 @@ export function SwapPage() {
     [amountInText, tokenIn.decimals],
   );
 
+  // Direct-pair reserves — still needed for the no-amount reserve preview
+  // below and for a direct route's own price impact.
   const pair = usePair(tokenIn.address, tokenOut?.address);
 
-  const quoteEnabled =
-    deployed && !!tokenOut && pair.pairAddress != null && !!amountIn && amountIn > 0n;
-  const quotePath: Address[] | undefined = tokenOut ? [tokenIn.address, tokenOut.address] : undefined;
+  // Reserves for each route base's two hops, so a confirmed via-route's
+  // impact can be computed without extra RPC calls once quoting has picked
+  // it (Task 17). Unused hop reads (base equals tokenIn/tokenOut, or no
+  // route ends up using that base) simply stay disabled inside usePair.
+  const hopIn0 = usePair(tokenIn.address, ROUTE_BASE_0.address);
+  const hopOut0 = usePair(ROUTE_BASE_0.address, tokenOut?.address);
+  const hopIn1 = usePair(tokenIn.address, ROUTE_BASE_1.address);
+  const hopOut1 = usePair(ROUTE_BASE_1.address, tokenOut?.address);
 
-  const { data: amountsOutData } = useReadContract({
-    address: ADDRESSES.router,
-    abi: routerAbi,
-    functionName: "getAmountsOut",
-    args: quoteEnabled ? [amountIn, quotePath!] : undefined,
+  // Every path worth quoting: direct first, then one 2-hop candidate per
+  // route base (skipping a base that's already tokenIn/tokenOut).
+  const candidates = useMemo(
+    () => (tokenOut ? buildCandidatePaths(tokenIn.address, tokenOut.address, ROUTE_BASE_TOKENS) : []),
+    [tokenIn.address, tokenOut?.address],
+  );
+
+  const quoteEnabled = deployed && candidates.length > 0 && !!amountIn && amountIn > 0n;
+  const { data: quotesData, isLoading: isQuotesLoading } = useReadContracts({
+    contracts: candidates.map(
+      (c) =>
+        ({
+          address: ADDRESSES.router,
+          abi: routerAbi,
+          functionName: "getAmountsOut",
+          args: [amountIn ?? 0n, c.path],
+        }) as const,
+    ),
     query: { enabled: quoteEnabled },
   });
-  const quotedOut: bigint | null = amountsOutData ? amountsOutData[amountsOutData.length - 1] : null;
+
+  // Each candidate's full router-quoted amounts (per-hop, not just the
+  // final output) — a failed candidate (no pool on one of its hops) reads
+  // as `null` rather than throwing, so one dead path can't sink the batch.
+  const quoted = useMemo(
+    () =>
+      candidates.map((candidate, i) => {
+        const result = quotesData?.[i];
+        const amounts = result?.status === "success" ? result.result : null;
+        return { candidate, amountOut: amounts ? amounts[amounts.length - 1] : null, amounts };
+      }),
+    [candidates, quotesData],
+  );
+
+  const best = useMemo(() => pickBestRoute(quoted), [quoted]);
+  const bestAmounts = useMemo(
+    () => (best ? (quoted.find((q) => q.candidate === best.candidate)?.amounts ?? null) : null),
+    [best, quoted],
+  );
+  const quotedOut: bigint | null = best?.amountOut ?? null;
 
   // Rate shown on the "quote" line: the router-quoted rate for the current
-  // amount when one is typed, else a reserve-based unit-rate preview (both
-  // use the same constant-product formula, so they agree once amountIn>0).
+  // amount when one is typed, else a reserve-based unit-rate preview from
+  // the direct pair (both use the same constant-product formula, so they
+  // agree once amountIn>0 for a direct route).
   const displayRate = useMemo(() => {
     if (!tokenOut) return null;
     const unit = 10n ** BigInt(tokenIn.decimals);
@@ -81,14 +136,29 @@ export function SwapPage() {
   }, [tokenOut, amountIn, quotedOut, pair.reserves, tokenIn.decimals]);
 
   const impactBps = useMemo(() => {
-    if (!amountIn || amountIn <= 0n || !pair.reserves) return 0;
-    if (pair.reserves.reserveA <= 0n || pair.reserves.reserveB <= 0n) return 0;
+    if (!amountIn || amountIn <= 0n || !best) return 0;
     try {
-      return priceImpactBps(amountIn, pair.reserves.reserveA, pair.reserves.reserveB);
+      if (best.candidate.kind === "direct") {
+        if (!pair.reserves) return 0;
+        return priceImpactBps(amountIn, pair.reserves.reserveA, pair.reserves.reserveB);
+      }
+      // via: each hop's own impact, from its own reserves and the amount
+      // the router actually quoted flowing through it (bestAmounts[0] into
+      // hop 1, the router-quoted intermediate bestAmounts[1] into hop 2),
+      // combined multiplicatively rather than summed.
+      const baseAddress = best.candidate.path[1];
+      const hops =
+        baseAddress.toLowerCase() === ROUTE_BASE_0.address.toLowerCase()
+          ? { in: hopIn0, out: hopOut0 }
+          : { in: hopIn1, out: hopOut1 };
+      if (!hops.in.reserves || !hops.out.reserves || !bestAmounts) return 0;
+      const hop1Impact = priceImpactBps(bestAmounts[0], hops.in.reserves.reserveA, hops.in.reserves.reserveB);
+      const hop2Impact = priceImpactBps(bestAmounts[1], hops.out.reserves.reserveA, hops.out.reserves.reserveB);
+      return combineImpactBps([hop1Impact, hop2Impact]);
     } catch {
       return 0;
     }
-  }, [amountIn, pair.reserves]);
+  }, [amountIn, best, bestAmounts, pair.reserves, hopIn0.reserves, hopOut0.reserves, hopIn1.reserves, hopOut1.reserves]);
 
   const highImpact = impactBps > HIGH_IMPACT_BPS;
   const warnImpact = impactBps > WARN_IMPACT_BPS;
@@ -124,7 +194,11 @@ export function SwapPage() {
     setTokenOut(t);
   }
 
-  const noPool = deployed && !!tokenOut && !pair.isLoading && pair.pairAddress === null;
+  // "No route" only once quoting has actually been attempted (needs a
+  // typed amount — getAmountsOut can't quote a zero input) and settled;
+  // before that, a fresh token selection simply shows no error yet rather
+  // than guessing.
+  const noRoute = deployed && !!tokenOut && quoteEnabled && !isQuotesLoading && best === null;
 
   // wagmi 3's useBalance is native-currency-only (no ERC20 `token` param —
   // that was a v1/v2 feature); ERC20 balances are read directly via
@@ -173,9 +247,9 @@ export function SwapPage() {
       setImpactConfirmed(true);
       return;
     }
-    if (!tokenOut || !amountIn || amountIn <= 0n || quotedOut == null) return;
+    if (!tokenOut || !amountIn || amountIn <= 0n || !best) return;
     try {
-      await swap({ tokenIn, tokenOut, amountIn, quotedOut });
+      await swap({ tokenIn, tokenOut, amountIn, quotedOut: best.amountOut, path: best.candidate.path });
       setAmountInText("");
       setImpactConfirmed(false);
     } catch {
@@ -189,14 +263,24 @@ export function SwapPage() {
     !tokenOut ||
     !amountIn ||
     amountIn <= 0n ||
-    noPool ||
+    noRoute ||
     (quotedOut == null && !(highImpact && !impactConfirmed));
 
   const executeLabel = highImpact && !impactConfirmed ? "confirm high impact" : "execute swap ↵";
 
+  // The route line: the confirmed best route once one's been quoted, else a
+  // neutral "direct" placeholder (matches what an amount-less selection
+  // showed before Task 17 — it flips to the real route, "via …" included,
+  // the moment an amount resolves a quote).
+  const routeLabel = !tokenOut
+    ? "—"
+    : best && best.candidate.kind === "via"
+      ? `via ${best.candidate.baseSymbol}`
+      : `direct (${tokenIn.symbol}/${tokenOut.symbol})`;
+
   function statusMessage(): { message: string; tone: StatusTone } {
     if (!deployed) return { message: "contracts not deployed yet — see docs.hppy.ai", tone: "error" };
-    if (noPool) return { message: "no pool for this pair — create one in pools", tone: "error" };
+    if (noRoute) return { message: "no route for this pair — create a pool in pools", tone: "error" };
     if (swapStatus === "approving") return { message: "approving token spend…", tone: "info" };
     if (swapStatus === "pending") return { message: "swap pending — waiting for confirmation…", tone: "info" };
     if (swapStatus === "success") return { message: "swap complete", tone: "success" };
@@ -303,9 +387,7 @@ export function SwapPage() {
         </div>
         <div className="quote-row" data-agent="swap-route">
           <span className="quote-label">{dotLeader("route")}</span>
-          <span className="quote-value">
-            {tokenOut ? `direct (${tokenIn.symbol}/${tokenOut.symbol})` : "—"}
-          </span>
+          <span className="quote-value">{routeLabel}</span>
         </div>
       </div>
 

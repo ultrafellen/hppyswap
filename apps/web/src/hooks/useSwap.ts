@@ -16,6 +16,14 @@ export type SwapParams = {
   amountIn: bigint;
   /** Raw output amount quoted from the router's `getAmountsOut` for `amountIn` (pre-slippage). */
   quotedOut: bigint;
+  /**
+   * The confirmed router path — direct `[in, out]` or a 2-hop `[in, base,
+   * out]` (Task 17's multi-hop routing). Always passed explicitly by the
+   * caller (the winning candidate from `pickBestRoute`); this hook never
+   * re-derives it from `tokenIn`/`tokenOut` so it can't drift from what was
+   * actually quoted.
+   */
+  path: Address[];
 };
 
 export type UseSwapReturn = {
@@ -52,7 +60,7 @@ export function useSwap(): UseSwapReturn {
   }, []);
 
   const swap = useCallback(
-    async ({ tokenIn, tokenOut, amountIn, quotedOut }: SwapParams): Promise<Hex> => {
+    async ({ tokenIn, tokenOut, amountIn, quotedOut, path }: SwapParams): Promise<Hex> => {
       setError(null);
       try {
         if (!isDeployed()) throw new Error("contracts not deployed");
@@ -60,7 +68,6 @@ export function useSwap(): UseSwapReturn {
 
         const amountOutMin = applySlippage(quotedOut, settings.slippageBps);
         const deadline = BigInt(Math.floor(Date.now() / 1000) + settings.deadlineMinutes * 60);
-        const path: Address[] = [tokenIn.address, tokenOut.address];
 
         // Native ETH needs no approval; ERC20 input needs router allowance
         // first (approve-if-short, exact amountIn — not infinite approval).
@@ -86,7 +93,12 @@ export function useSwap(): UseSwapReturn {
 
         setStatus("pending");
         let hash: Hex;
-        if (tokenIn.isNative) {
+        // Keyed off the path's own ends (not just tokenIn/tokenOut) so a
+        // 2-hop route through WETH picks the same ETH-leg function a direct
+        // ETH pair would — path[0]/path[last] are what the router actually
+        // sees, tokenIn/tokenOut.isNative is what the UI actually selected;
+        // both must agree for the native leg to apply.
+        if (path[0].toLowerCase() === ADDRESSES.weth.toLowerCase() && tokenIn.isNative) {
           hash = await writeContract(wagmiConfig, {
             address: ADDRESSES.router,
             abi: routerAbi,
@@ -94,7 +106,7 @@ export function useSwap(): UseSwapReturn {
             args: [amountOutMin, path, owner, deadline],
             value: amountIn,
           });
-        } else if (tokenOut.isNative) {
+        } else if (path[path.length - 1].toLowerCase() === ADDRESSES.weth.toLowerCase() && tokenOut.isNative) {
           hash = await writeContract(wagmiConfig, {
             address: ADDRESSES.router,
             abi: routerAbi,

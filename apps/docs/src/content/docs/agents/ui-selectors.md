@@ -58,7 +58,7 @@ or visible text (which can change for purely cosmetic reasons).
 | `swap-direction-flip` | "↓" button | Swaps sell/buy tokens and clears the amount |
 | `swap-quote-line` | Quote row container | Text: `1 TOKEN_IN = X TOKEN_OUT` |
 | `swap-impact` | Price impact value text | Percentage; includes `⚠ high impact` in its text above 5% |
-| `swap-route` | Route row container | Text: `direct (TOKEN_IN/TOKEN_OUT)` — no multi-hop in MVP |
+| `swap-route` | Route row container | Text: `direct (TOKEN_IN/TOKEN_OUT)` when a direct pool exists, else `via BASE_SYMBOL` for a 2-hop route through a route base (e.g. `via USDC.e`) — capped at one intermediate hop |
 | `swap-execute` | Execute button | Label toggles to "confirm high impact" above 15% impact (click twice) |
 | `swap-status` | `aria-live` status region | Approve/pending/success/error text; see [the contract](#the-contract) |
 | `settings-trigger` | "slippage X% ⚙" button | Opens the slippage/deadline/RPC settings panel |

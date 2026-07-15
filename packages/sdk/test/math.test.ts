@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "vitest";
-import { getAmountOut, getAmountIn, quote, applySlippage, priceImpactBps } from "../src/math";
+import { getAmountOut, getAmountIn, quote, applySlippage, priceImpactBps, combineImpactBps } from "../src/math";
 
 describe("getAmountOut", () => {
   it("matches x*y=k with 0.3% fee", () => {
@@ -34,5 +34,20 @@ describe("priceImpactBps", () => {
   it("small trade ≈ fee only impact", () => {
     const bps = priceImpactBps(10n ** 15n, 1000n * 10n ** 18n, 1000n * 10n ** 18n);
     expect(bps).toBeLessThan(35); // ~0.3% fee + tiny impact
+  });
+});
+describe("combineImpactBps", () => {
+  it("returns 0 for an empty list (no hops)", () => {
+    expect(combineImpactBps([])).toBe(0);
+  });
+  it("is the identity for a single hop", () => {
+    expect(combineImpactBps([30])).toBe(30);
+  });
+  it("compounds two hops multiplicatively (1 - Π(1 - i/10000))", () => {
+    // 10000 * (1 - 0.997^2) = 59.91 -> rounds to 60.
+    expect(combineImpactBps([30, 30])).toBe(60);
+  });
+  it("stays 0 when every hop has 0 impact", () => {
+    expect(combineImpactBps([0, 0])).toBe(0);
   });
 });

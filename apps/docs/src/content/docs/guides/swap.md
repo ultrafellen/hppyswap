@@ -39,8 +39,12 @@ terminal-styled single card.
    - `impact` — the price impact of your trade size against current
      reserves, as a percentage. Above **5%** it's shown in a warning color
      with a `⚠ high impact` marker appended to the text.
-   - `route` — the swap path. HPPYSwap MVP only routes directly between the
-     two selected tokens (`direct (TOKEN_IN/TOKEN_OUT)`), no multi-hop.
+   - `route` — the swap path. When there's a direct pool between the two
+     selected tokens, this reads `direct (TOKEN_IN/TOKEN_OUT)`. Otherwise
+     HPPYSwap tries a 2-hop route through USDC.e or WETH, whichever pools
+     exist to bridge the pair — e.g. selling ETH for HPP has no direct
+     pool, so it routes through USDC.e and shows `via USDC.e`. Only one
+     intermediate hop is tried; if even that fails, see below.
 
 6. **Check slippage and deadline** via the ⚙ settings button in the top of
    the card (labeled `slippage 0.50% ⚙` by default). It opens a panel with
@@ -63,6 +67,9 @@ terminal-styled single card.
    guard exists specifically to stop a fat-fingered amount (or a thin pool)
    from executing without a second look.
 
-If there's no pool for the pair you picked, the status line reads
-`no pool for this pair — create one in pools` and the execute button stays
-disabled — head to the [liquidity guide](/guides/liquidity/) to create one.
+If there's no route for the pair you picked — no direct pool, and no
+route-base pool pair to bridge it either — the status line reads
+`no route for this pair — create a pool in pools` and the execute button
+stays disabled (this only shows once you've typed an amount, since a route
+can't be quoted without one) — head to the
+[liquidity guide](/guides/liquidity/) to create a pool.
