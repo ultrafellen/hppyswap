@@ -13,6 +13,10 @@ export function App() {
       <Routes>
         <Route path="/" element={<SwapPage />} />
         <Route path="/pools" element={<PoolsPage />} />
+        {/* Placeholder route for Task 10's "create pool" link — Task 11
+            implements the new-pool mode inside PoolDetailPage; for now it
+            renders the same placeholder direct address loads get. */}
+        <Route path="/pools/new" element={<PoolDetailPage />} />
         <Route path="/pools/:pairAddress" element={<PoolDetailPage />} />
       </Routes>
     </Layout>
