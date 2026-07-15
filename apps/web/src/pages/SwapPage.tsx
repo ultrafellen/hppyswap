@@ -4,7 +4,7 @@ import { useBalance, useConnection, useReadContract, useReadContracts } from "wa
 import {
   ADDRESSES,
   DEFAULT_TOKENS,
-  ROUTE_BASES,
+  ROUTE_BASE_TOKENS,
   combineImpactBps,
   erc20Abi,
   getAmountOut,
@@ -21,7 +21,7 @@ import { StatusLine, type StatusTone } from "../components/StatusLine";
 import { usePair } from "../hooks/usePair";
 import { useSwap } from "../hooks/useSwap";
 import { formatAmount, parseAmount, toPlainAmount } from "../lib/format";
-import { buildCandidatePaths, pickBestRoute, type RouteBase } from "../lib/routing";
+import { buildCandidatePaths, pickBestRoute } from "../lib/routing";
 
 const HIGH_IMPACT_BPS = 1500;
 const WARN_IMPACT_BPS = 500;
@@ -30,16 +30,16 @@ const WARN_IMPACT_BPS = 500;
 // composite mockup (e.g. "quote ....... 1 ETH = ...").
 const DOT_LEADER_WIDTH = 12;
 
-// Route bases, resolved to a display symbol from DEFAULT_TOKENS (module
-// scope: ROUTE_BASES never changes at runtime, so this — and the number of
-// usePair calls it drives below — is computed once, not per render).
-// Exactly 2 entries by design (packages/sdk/src/tokens.ts); the two hop
-// reads below are unrolled rather than mapped so the useSwap-page's hook
-// call count stays static across renders (rules-of-hooks).
-const ROUTE_BASE_TOKENS: RouteBase[] = ROUTE_BASES.map((address) => ({
-  address,
-  symbol: DEFAULT_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase())?.symbol ?? address,
-}));
+// Route bases and their display symbols come straight from the sdk's
+// ROUTE_BASE_TOKENS — deliberately NOT resolved by looking each address up
+// in DEFAULT_TOKENS, since the WETH route base shares its address with
+// NATIVE_ETH there and would resolve to the symbol "ETH", making a
+// via-WETH route display the misleading "via ETH" (only WETH itself moves
+// mid-route). Module scope: ROUTE_BASE_TOKENS never changes at runtime, so
+// the number of usePair calls it drives below is computed once, not per
+// render. Exactly 2 entries by design (packages/sdk/src/tokens.ts); the two
+// hop reads below are unrolled rather than mapped so the useSwap-page's
+// hook call count stays static across renders (rules-of-hooks).
 const ROUTE_BASE_0 = ROUTE_BASE_TOKENS[0];
 const ROUTE_BASE_1 = ROUTE_BASE_TOKENS[1];
 
@@ -135,11 +135,18 @@ export function SwapPage() {
     return null;
   }, [tokenOut, amountIn, quotedOut, pair.reserves, tokenIn.decimals]);
 
-  const impactBps = useMemo(() => {
-    if (!amountIn || amountIn <= 0n || !best) return 0;
+  // `null` means "not yet known" — either no route has resolved yet, or one
+  // has (quotedOut is set) but the reserves needed to price its impact
+  // haven't loaded (a separate set of RPC reads from the router's
+  // getAmountsOut quote, so it can lag behind by a render or two). Callers
+  // must treat null as "don't know", not as zero impact — showing 0.00%
+  // during that window is exactly the bug this type distinguishes against.
+  const impactBps = useMemo<number | null>(() => {
+    if (!amountIn || amountIn <= 0n) return 0;
+    if (!best) return null;
     try {
       if (best.candidate.kind === "direct") {
-        if (!pair.reserves) return 0;
+        if (!pair.reserves) return null;
         return priceImpactBps(amountIn, pair.reserves.reserveA, pair.reserves.reserveB);
       }
       // via: each hop's own impact, from its own reserves and the amount
@@ -151,17 +158,22 @@ export function SwapPage() {
         baseAddress.toLowerCase() === ROUTE_BASE_0.address.toLowerCase()
           ? { in: hopIn0, out: hopOut0 }
           : { in: hopIn1, out: hopOut1 };
-      if (!hops.in.reserves || !hops.out.reserves || !bestAmounts) return 0;
+      if (!hops.in.reserves || !hops.out.reserves || !bestAmounts) return null;
       const hop1Impact = priceImpactBps(bestAmounts[0], hops.in.reserves.reserveA, hops.in.reserves.reserveB);
       const hop2Impact = priceImpactBps(bestAmounts[1], hops.out.reserves.reserveA, hops.out.reserves.reserveB);
       return combineImpactBps([hop1Impact, hop2Impact]);
     } catch {
-      return 0;
+      return null;
     }
   }, [amountIn, best, bestAmounts, pair.reserves, hopIn0.reserves, hopOut0.reserves, hopIn1.reserves, hopOut1.reserves]);
 
-  const highImpact = impactBps > HIGH_IMPACT_BPS;
-  const warnImpact = impactBps > WARN_IMPACT_BPS;
+  const highImpact = impactBps != null && impactBps > HIGH_IMPACT_BPS;
+  const warnImpact = impactBps != null && impactBps > WARN_IMPACT_BPS;
+  // True only in the specific window described above: a route has resolved
+  // (quotedOut exists) but its impact hasn't. Gates execute (below) so a
+  // high-impact via-route can't slip past the warn/confirm step just
+  // because its reserves read hadn't landed yet.
+  const impactUnknown = best != null && impactBps == null;
 
   // A fresh amount/pair always needs a fresh high-impact confirmation.
   useEffect(() => {
@@ -264,6 +276,11 @@ export function SwapPage() {
     !amountIn ||
     amountIn <= 0n ||
     noRoute ||
+    // Without this, a route that resolves before its impact reserves do
+    // would fall through here with quotedOut != null and highImpact still
+    // false (impactBps unknown reads as "not high"), enabling execute
+    // during the exact window the warn/confirm gate exists to catch.
+    impactUnknown ||
     (quotedOut == null && !(highImpact && !impactConfirmed));
 
   const executeLabel = highImpact && !impactConfirmed ? "confirm high impact" : "execute swap ↵";
@@ -380,7 +397,7 @@ export function SwapPage() {
             className={warnImpact ? "quote-value quote-value-warn" : "quote-value"}
             data-agent="swap-impact"
           >
-            {amountIn && amountIn > 0n
+            {amountIn && amountIn > 0n && impactBps != null
               ? `${(impactBps / 100).toFixed(2)}%${warnImpact ? " ⚠ high impact" : ""}`
               : "—"}
           </span>

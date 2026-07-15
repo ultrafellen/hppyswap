@@ -24,5 +24,17 @@ export const DEFAULT_TOKENS: TokenInfo[] = [NATIVE_ETH, HPP, USDC_E];
  * against, so they're the bases most likely to bridge a missing direct
  * pair. Not derived from DEFAULT_TOKENS (which includes HPP, not a useful
  * routing base) or extended beyond 2 hops (YAGNI).
+ *
+ * Symbols are given explicitly here rather than resolved by looking the
+ * address up in DEFAULT_TOKENS: the WETH route base shares its address with
+ * NATIVE_ETH (both wrap the same contract), so a DEFAULT_TOKENS lookup
+ * would resolve it to "ETH" and a via-WETH route would display the
+ * misleading "via ETH" — only WETH itself moves mid-route, ETH never does
+ * (Task 17 fix-review finding).
  */
-export const ROUTE_BASES: Address[] = [ADDRESSES.weth, USDC_E.address];
+export const ROUTE_BASE_TOKENS: { address: Address; symbol: string }[] = [
+  { address: ADDRESSES.weth, symbol: "WETH" },
+  { address: USDC_E.address, symbol: "USDC.e" },
+];
+/** Plain addresses, derived from ROUTE_BASE_TOKENS — kept for callers (e.g. the agent manifest's `routeBases`) that only need the address list. */
+export const ROUTE_BASES: Address[] = ROUTE_BASE_TOKENS.map((t) => t.address);
