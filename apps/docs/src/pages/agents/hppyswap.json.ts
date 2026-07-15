@@ -2,8 +2,15 @@
 import type { APIRoute } from "astro";
 import { hpp, ADDRESSES, DEFAULT_TOKENS, ROUTE_BASES, isDeployed } from "@hppyswap/sdk";
 
-export const GET: APIRoute = () =>
-  new Response(
+export const GET: APIRoute = () => {
+  // Map tokens to make logoURI absolute against the app origin (https://hppy.ai).
+  // Logo assets are served by the app origin, so relative paths must be resolved there.
+  const tokens = DEFAULT_TOKENS.map((t) => ({
+    ...t,
+    logoURI: t.logoURI ? `https://hppy.ai${t.logoURI}` : undefined,
+  }));
+
+  return new Response(
     JSON.stringify(
       {
         name: "HPPYSwap",
@@ -19,7 +26,7 @@ export const GET: APIRoute = () =>
         },
         deployed: isDeployed(),
         contracts: ADDRESSES,
-        tokens: DEFAULT_TOKENS,
+        tokens,
         routeBases: ROUTE_BASES,
         uiSelectorsDoc: "https://docs.hppy.ai/agents/ui-selectors/",
       },
@@ -28,3 +35,4 @@ export const GET: APIRoute = () =>
     ),
     { headers: { "Content-Type": "application/json" } },
   );
+};
