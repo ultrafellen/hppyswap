@@ -26,6 +26,20 @@ build time via `@hppyswap/sdk`).
 
 Init code hash (see below): `0x5800ffe4b53beb540183bd1f16bf7fa0957897af8ffe1266f1a1c30ea0b58b72`
 
+## Default tokens
+
+These are the `DEFAULT_TOKENS` exported from `@hppyswap/sdk` — the same
+three tokens the web app's swap and pool forms default to — and the
+[agent manifest](/agents/hppyswap.json) serves each one's icon as an
+absolute logo URL (resolved against `https://hppy.ai`) so agents don't need
+to guess a base path.
+
+| Icon | Symbol | Name | Address | Decimals |
+|---|---|---|---|---|
+| <img src="/tokens/eth.png" alt="" width="20" height="20" style="vertical-align:middle;border-radius:50%;background:#eef2f6;border:1px solid #ccc" /> | ETH | Ether (native) | [`0x82553CDA0bEd9262a879F9F7524cd20288B357AA`](https://explorer.hpp.io/address/0x82553CDA0bEd9262a879F9F7524cd20288B357AA) (WETH) | 18 |
+| <img src="/tokens/hpp.png" alt="" width="20" height="20" style="vertical-align:middle;border-radius:50%;background:#eef2f6;border:1px solid #ccc" /> | HPP | HousePartyProtocol | [`0xB48334E7938367bC24Fe1F19000D6f06C622E6c7`](https://explorer.hpp.io/address/0xB48334E7938367bC24Fe1F19000D6f06C622E6c7) | 18 |
+| <img src="/tokens/usdce.png" alt="" width="20" height="20" style="vertical-align:middle;border-radius:50%;background:#eef2f6;border:1px solid #ccc" /> | USDC.e | Bridged USDC | [`0x401eCb1D350407f13ba348573E5630B83638E30D`](https://explorer.hpp.io/address/0x401eCb1D350407f13ba348573E5630B83638E30D) | 6 |
+
 ## Init code hash
 
 `UniswapV2Library.pairFor` derives a pair's address deterministically from
