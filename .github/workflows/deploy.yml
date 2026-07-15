@@ -1,0 +1,53 @@
+# Deploy apps/web and apps/docs to Cloudflare Workers on push to main.
+# Only the app(s) affected by the change (plus shared packages/sdk or the
+# lockfile) are rebuilt and deployed, via dorny/paths-filter.
+name: Deploy
+on:
+  push: { branches: [main] }
+concurrency: deploy-${{ github.ref }}
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.f.outputs.web }}
+      docs: ${{ steps.f.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: f
+        with:
+          filters: |
+            web: ['apps/web/**', 'packages/sdk/**', 'pnpm-lock.yaml']
+            docs: ['apps/docs/**', 'packages/sdk/**', 'pnpm-lock.yaml']
+  deploy-web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter hppyswap-web... build
+      - uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/web
+  deploy-docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter hppyswap-docs... build
+      - uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/docs
