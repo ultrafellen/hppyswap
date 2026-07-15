@@ -49,6 +49,14 @@ describe("computeRemoveAmountsMin", () => {
     expect(computeRemoveAmountsMin(0n, 1000n, 1000n, 2000n, 50)).toEqual({ amountAMin: 0n, amountBMin: 0n });
     expect(computeRemoveAmountsMin(100n, 0n, 1000n, 2000n, 50)).toEqual({ amountAMin: 0n, amountBMin: 0n });
   });
+
+  it("floors the share-of-reserves division for a non-exact split, even with zero slippage", () => {
+    // 1 of 3 total LP against a 10/20 reserve pool: raw shares are
+    // 1*10/3 = 3.33 -> floors to 3, and 1*20/3 = 6.67 -> floors to 6.
+    // Zero slippage means applySlippage is a no-op, isolating the floor
+    // division itself rather than any slippage rounding on top of it.
+    expect(computeRemoveAmountsMin(1n, 3n, 10n, 20n, 0)).toEqual({ amountAMin: 3n, amountBMin: 6n });
+  });
 });
 
 describe("lpAmountForPercent", () => {

@@ -58,7 +58,11 @@ export function PoolDetailPage() {
 
   // ---- existing-pool mode: fetch everything fresh by address ----
   const pairReadsEnabled = deployed && !isNewRoute && routeAddress != null;
-  const { data: pairCoreData, isLoading: isCoreLoading } = useReadContracts({
+  const {
+    data: pairCoreData,
+    isLoading: isCoreLoading,
+    refetch: refetchPairCore,
+  } = useReadContracts({
     contracts: [
       { address: routeAddress ?? undefined, abi: pairAbi, functionName: "token0" },
       { address: routeAddress ?? undefined, abi: pairAbi, functionName: "token1" },
@@ -127,7 +131,7 @@ export function PoolDetailPage() {
   const notFound = !isNewRoute && deployed && (routeAddress == null || coreReadFailed);
 
   // ---- LP balance for the header + remove form ----
-  const { data: lpBalanceData } = useReadContract({
+  const { data: lpBalanceData, refetch: refetchLpBalance } = useReadContract({
     address: routeAddress ?? undefined,
     abi: pairAbi,
     functionName: "balanceOf",
@@ -207,7 +211,14 @@ export function PoolDetailPage() {
       setAmountBText("");
       // A brand-new pool's address isn't known client-side until this tx
       // lands; send the user to the list rather than guess at a URL.
-      if (isNewRoute) navigate("/pools");
+      if (isNewRoute) {
+        navigate("/pools");
+      } else {
+        // Reserves/totalSupply and the caller's LP balance just changed
+        // on-chain — refetch so the header, remove-form math, and the
+        // next percent-preset click aren't computed off stale data.
+        await Promise.all([refetchPairCore(), refetchLpBalance()]);
+      }
     } catch {
       // useLiquidity already captured status/error for the liq-status region.
     }
@@ -235,6 +246,10 @@ export function PoolDetailPage() {
         reserveB: fetchedPool.reserve1,
       });
       setRemovePercent(null);
+      // Same staleness concern as handleAdd — a stale lpBalance/totalSupply
+      // would make a later "100%" click compute against burned liquidity
+      // that no longer exists.
+      await Promise.all([refetchPairCore(), refetchLpBalance()]);
     } catch {
       // useLiquidity already captured status/error for the liq-status region.
     }
@@ -379,7 +394,7 @@ export function PoolDetailPage() {
         <div className="swap-card">
           <div className="swap-side">
             <div className="swap-side-label">&gt; withdraw</div>
-            <div className="percent-button-group" data-agent="liq-remove-percent">
+            <div className="percent-button-group" data-agent="liq-remove-percent-group">
               {PERCENT_PRESETS.map((p) => (
                 <button
                   key={p}
