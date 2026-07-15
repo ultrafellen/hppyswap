@@ -1,10 +1,20 @@
 # Deploy apps/web and apps/docs to Cloudflare Workers on push to main.
 # Only the app(s) affected by the change (plus shared packages/sdk or the
-# lockfile) are rebuilt and deployed, via dorny/paths-filter.
+# lockfile) are rebuilt and deployed, via dorny/paths-filter. Both deploy
+# jobs are gated on the JS test suite passing first (the `verify` job) so a
+# push that breaks tests can't reach production.
 name: Deploy
 on:
   push: { branches: [main] }
+  # Manual fallback: paths-filter compares against the previous commit, which
+  # is a no-op ("zero SHA") on the very first push to a new branch/repo — its
+  # outputs come back false and nothing would deploy. workflow_dispatch lets
+  # a human trigger a full deploy of both apps in that case (or any time a
+  # manual redeploy is needed) without depending on paths-filter's diff.
+  workflow_dispatch:
 concurrency: deploy-${{ github.ref }}
+permissions:
+  contents: read
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -19,9 +29,22 @@ jobs:
           filters: |
             web: ['apps/web/**', 'packages/sdk/**', 'pnpm-lock.yaml']
             docs: ['apps/docs/**', 'packages/sdk/**', 'pnpm-lock.yaml']
+  # Contracts are never deployed from CI (manual, one-time, local operation —
+  # see contracts/README.md), so this only needs to cover the JS workspaces
+  # that deploy-web/deploy-docs are about to ship.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
   deploy-web:
-    needs: changes
-    if: needs.changes.outputs.web == 'true'
+    needs: [changes, verify]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -36,8 +59,8 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/web
   deploy-docs:
-    needs: changes
-    if: needs.changes.outputs.docs == 'true'
+    needs: [changes, verify]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
