@@ -56,8 +56,16 @@ contract AmmTest is Test {
         uint balBefore = tokenB.balanceOf(address(this));
         IRouter(router).swapExactTokensForTokens(1 ether, expectedOut, path, address(this), block.timestamp + 1);
         assertEq(tokenB.balanceOf(address(this)) - balBefore, expectedOut);
-        // 0.3% fee: out < in * reserveOut/reserveIn
-        assertLt(expectedOut, 1 ether);
+        // Isolate the 0.3% fee from slippage: quote must match the exact
+        // Uniswap 997/1000 fee formula, and must be strictly below the
+        // zero-fee constant-product output.
+        uint amountIn = 1 ether;
+        uint reserveIn = 1000 ether;
+        uint reserveOut = 1000 ether;
+        uint feeOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997);
+        uint noFeeOut = (amountIn * reserveOut) / (reserveIn + amountIn);
+        assertEq(expectedOut, feeOut, "quote must match 0.3% fee formula");
+        assertLt(expectedOut, noFeeOut, "fee must reduce output below no-fee swap");
     }
 
     function test_removeLiquidity_returnsTokens() public {
@@ -69,12 +77,20 @@ contract AmmTest is Test {
         assertGt(outA, 0); assertGt(outB, 0);
     }
 
-    function testFuzz_swapNeverDrainsReserves(uint96 amountIn) public {
-        vm.assume(amountIn > 1000);
-        _addLiquidity(1000 ether, 1000 ether);
+    function testFuzz_swapNeverDrainsReserves(uint96 amountInRaw) public {
+        address pair = _addLiquidity(1000 ether, 1000 ether);
+        // Cap at the sender's actual remaining balance (minted 1,000,000 ether minus the
+        // 1000 ether just deposited as liquidity) so transferFrom never reverts on the
+        // upper end of the fuzz range: type(uint96).max (~7.9e28) exceeds that balance.
+        uint amountIn = bound(uint(amountInRaw), 1001, tokenA.balanceOf(address(this)));
         address[] memory path = new address[](2);
         path[0] = address(tokenA); path[1] = address(tokenB);
         uint[] memory amounts = IRouter(router).getAmountsOut(amountIn, path);
-        assertLt(amounts[1], 1000 ether, "output must be below reserve");
+        uint balBefore = tokenB.balanceOf(address(this));
+        IRouter(router).swapExactTokensForTokens(amountIn, amounts[1], path, address(this), block.timestamp + 1);
+        assertEq(tokenB.balanceOf(address(this)) - balBefore, amounts[1], "executed output equals quote");
+        (uint112 r0, uint112 r1,) = IPair(pair).getReserves();
+        assertGt(uint(r0), 0); assertGt(uint(r1), 0);
+        assertGe(uint(r0) * uint(r1), 1000 ether * 1000 ether, "k must not decrease");
     }
 }
