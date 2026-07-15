@@ -6,6 +6,8 @@ auto_detect_solc = true
 optimizer = true
 optimizer_runs = 999999
 evm_version = "istanbul"
+# Allows script/Deploy.s.sol to write its deployment-190415.json output.
+fs_permissions = [{ access = "read-write", path = "./deployment-190415.json" }]
 
 [rpc_endpoints]
 hpp = "https://mainnet.hpp.io"
