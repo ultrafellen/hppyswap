@@ -15,7 +15,7 @@ export function ConnectButton() {
   const { address, isConnected, chainId } = useConnection();
   const connectors = useConnectors();
   const { mutate: connect, isPending: isConnecting, error: connectError } = useConnect();
-  const { mutate: disconnect, isPending: isDisconnecting } = useDisconnect();
+  const { mutate: disconnect, isPending: isDisconnecting, error: disconnectError } = useDisconnect();
   const { mutate: switchChain, isPending: isSwitching, error: switchError } = useSwitchChain();
 
   if (!isConnected) {
@@ -32,7 +32,7 @@ export function ConnectButton() {
           connect ▾
         </button>
         {expanded && (
-          <div className="connect-menu" role="menu">
+          <div className="connect-menu">
             {connectors.length === 0 ? (
               <p className="connect-menu-empty">no wallet detected</p>
             ) : (
@@ -40,7 +40,6 @@ export function ConnectButton() {
                 <button
                   key={connector.uid}
                   type="button"
-                  role="menuitem"
                   onClick={() => {
                     setExpanded(false);
                     connect({ connector });
@@ -62,7 +61,7 @@ export function ConnectButton() {
     );
   }
 
-  if (chainId !== hpp.id) {
+  if (chainId != null && chainId !== hpp.id) {
     return (
       <div className="connect-wrap">
         <button
@@ -90,6 +89,11 @@ export function ConnectButton() {
         disconnect
       </button>
       {isDisconnecting && <p className="connect-status">disconnecting…</p>}
+      {disconnectError && (
+        <p role="alert" className="connect-status connect-status-error">
+          {disconnectError.message}
+        </p>
+      )}
     </div>
   );
 }
