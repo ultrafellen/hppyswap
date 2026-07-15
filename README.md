@@ -15,9 +15,17 @@ directly or drive that same UI via a documented, stable selector contract.
 
 ## Live
 
-- App: [hppy.ai](https://hppy.ai) — coming soon (contracts are not yet
-  deployed)
-- Docs: [docs.hppy.ai](https://docs.hppy.ai) — coming soon
+- App: [hppy.ai](https://hppy.ai) (also [www.hppy.ai](https://www.hppy.ai))
+  — the DEX
+- Docs: [docs.hppy.ai](https://docs.hppy.ai) — documentation
+
+### Deployed contracts (HPP Mainnet, chainId 190415)
+
+| Contract | Address |
+|---|---|
+| Factory | [`0xf799BF70CEb51e26efa1d9744BE617Bab7b88e41`](https://explorer.hpp.io/address/0xf799BF70CEb51e26efa1d9744BE617Bab7b88e41) |
+| Router | [`0x661aA4D2B0e3348125DEe6E75A28aD8E1e66f8a7`](https://explorer.hpp.io/address/0x661aA4D2B0e3348125DEe6E75A28aD8E1e66f8a7) |
+| WETH (canonical) | [`0x82553CDA0bEd9262a879F9F7524cd20288B357AA`](https://explorer.hpp.io/address/0x82553CDA0bEd9262a879F9F7524cd20288B357AA) |
 
 ## Monorepo layout
 
@@ -62,7 +70,7 @@ exposed as `aria-live` DOM text, not a spinner or a color.
 | Agent manifest | `https://docs.hppy.ai/agents/hppyswap.json` |
 | UI selector catalog | `https://docs.hppy.ai/agents/ui-selectors/` |
 
-(These paths go live once `docs.hppy.ai` is deployed — see [Live](#live).)
+See [Live](#live) for the deployed URLs.
 
 ## Development
 
