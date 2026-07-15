@@ -103,10 +103,26 @@ export function SwapPage() {
   // A terminal swap status (success/error) shouldn't linger once the user
   // starts editing a new swap — otherwise the aria-live region keeps
   // announcing e.g. "swap complete" while they set up the next trade.
-  // `reset` itself guards against clobbering an in-flight approve/pending.
-  useEffect(() => {
+  // Deliberately NOT an effect on amountInText: handleExecute clears the
+  // input programmatically after success, and an effect would wipe the
+  // "swap complete" announcement in the same frame. Instead the USER input
+  // handlers below (amount typing, token selects, flip, max) call
+  // resetSwapStatus() directly; `reset` itself guards against clobbering an
+  // in-flight approve/pending.
+  function handleAmountChange(text: string) {
     resetSwapStatus();
-  }, [tokenIn.address, tokenOut?.address, amountInText]);
+    setAmountInText(text);
+  }
+
+  function handleSelectTokenIn(t: TokenInfo) {
+    resetSwapStatus();
+    setTokenIn(t);
+  }
+
+  function handleSelectTokenOut(t: TokenInfo) {
+    resetSwapStatus();
+    setTokenOut(t);
+  }
 
   const noPool = deployed && !!tokenOut && !pair.isLoading && pair.pairAddress === null;
 
@@ -135,6 +151,7 @@ export function SwapPage() {
 
   function handleFlip() {
     if (!tokenOut) return;
+    resetSwapStatus();
     const nextIn = tokenOut;
     const nextOut = tokenIn;
     setTokenIn(nextIn);
@@ -144,6 +161,7 @@ export function SwapPage() {
 
   function handleMax() {
     if (!balance) return;
+    resetSwapStatus();
     setAmountInText(toPlainAmount(balance.value, balance.decimals));
   }
 
@@ -203,14 +221,14 @@ export function SwapPage() {
           <div className="swap-side-row">
             <AmountInput
               value={amountInText}
-              onChange={setAmountInText}
+              onChange={handleAmountChange}
               decimals={tokenIn.decimals}
               disabled={inputsDisabled}
               dataAgent="swap-amount-in"
             />
             <TokenSelect
               token={tokenIn}
-              onSelect={setTokenIn}
+              onSelect={handleSelectTokenIn}
               dataAgent="swap-token-in"
               disabled={inputsDisabled}
               excludeAddress={tokenOut?.address}
@@ -253,7 +271,7 @@ export function SwapPage() {
             />
             <TokenSelect
               token={tokenOut}
-              onSelect={setTokenOut}
+              onSelect={handleSelectTokenOut}
               dataAgent="swap-token-out"
               disabled={inputsDisabled}
               excludeAddress={tokenIn.address}

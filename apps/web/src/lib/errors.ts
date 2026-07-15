@@ -12,6 +12,7 @@ const SUBSTRING_MAP: ReadonlyArray<readonly [string, string]> = [
   ["INSUFFICIENT_LIQUIDITY", "not enough liquidity in this pool for this trade"],
   ["EXPIRED", "transaction deadline expired — try again"],
   ["TransferHelper: TRANSFER_FROM_FAILED", "token transfer failed — check your token balance and allowance"],
+  ["approval transaction reverted", "token approval failed — try again"],
   ["insufficient funds", "insufficient funds for this transaction"],
 ];
 
