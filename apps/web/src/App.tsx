@@ -13,9 +13,10 @@ export function App() {
       <Routes>
         <Route path="/" element={<SwapPage />} />
         <Route path="/pools" element={<PoolsPage />} />
-        {/* Placeholder route for Task 10's "create pool" link — Task 11
-            implements the new-pool mode inside PoolDetailPage; for now it
-            renders the same placeholder direct address loads get. */}
+        {/* Both routes render PoolDetailPage; it tells them apart by
+            whether `:pairAddress` matched (undefined on "/pools/new") and
+            renders new-pool-picker mode vs. fetch-by-address mode
+            accordingly — see PoolDetailPage's module doc comment. */}
         <Route path="/pools/new" element={<PoolDetailPage />} />
         <Route path="/pools/:pairAddress" element={<PoolDetailPage />} />
       </Routes>
