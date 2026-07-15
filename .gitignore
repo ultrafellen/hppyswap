@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.astro/
+out/
+cache/
+broadcast/
+.env
+.env.*
+!.env.example
+.DS_Store
+.wrangler/
+.superpowers/
+docs/superpowers/
