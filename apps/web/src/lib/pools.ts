@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { Address } from "viem";
+import { ADDRESSES, USD_ANCHOR } from "@hppyswap/sdk";
 import type { PoolRow, TokenMeta } from "../hooks/usePools";
 
 /** Per-pair reads (token0/token1/getReserves) before token metadata is joined in. */
@@ -52,4 +53,34 @@ export function buildPoolRows(
     rows.push({ pair: p.pair, token0, token1, reserve0: p.reserve0, reserve1: p.reserve1 });
   }
   return rows;
+}
+
+/**
+ * Ranks a token address for display-order purposes: USDC.e (the USD price
+ * anchor) outranks WETH, which outranks everything else. Higher rank means
+ * "more quote-like" — see `orderForDisplay` below.
+ */
+function quotePriority(address: Address): number {
+  const lower = address.toLowerCase();
+  if (lower === USD_ANCHOR.address.toLowerCase()) return 2;
+  if (lower === ADDRESSES.weth.toLowerCase()) return 1;
+  return 0;
+}
+
+/**
+ * Reorders a pair's two tokens for display as `base/quote`, matching the
+ * Uniswap-interface convention: stables and WETH act as the quote side, so
+ * whichever token ranks higher on `quotePriority` is placed last. On-chain
+ * data (usePair/usePools, `token0`/`token1`, the `data-pair` attr) stays in
+ * factory (address-sorted) order — this is purely a presentation helper
+ * applied at render time, never fed back into on-chain math.
+ *
+ * Ties (including two unranked tokens) keep the input order, so a pair of
+ * unknown tokens renders unchanged from its on-chain token0/token1 order.
+ */
+export function orderForDisplay<T extends { address: Address }>(token0: T, token1: T): [T, T] {
+  const priority0 = quotePriority(token0.address);
+  const priority1 = quotePriority(token1.address);
+  if (priority0 > priority1) return [token1, token0];
+  return [token0, token1];
 }

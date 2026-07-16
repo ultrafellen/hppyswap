@@ -41,6 +41,14 @@ or visible text (which can change for purely cosmetic reasons).
   the literal text `"—"` when no USD price is known, since they sit next to
   other always-populated cells/lines rather than being the sole content of
   an input's helper line.
+- **Display order is base/quote, not on-chain order.** Pair labels and
+  reserves text (`pool-row`'s pair link, `pools-table`'s reserves column,
+  `liq-reserves`) show tokens as `BASE/QUOTE` — stables (USDC.e) and WETH
+  are treated as the quote side, e.g. `WETH/USDC.e`, `HPP/USDC.e` —
+  regardless of the pair contract's on-chain `token0`/`token1`, which the
+  factory always orders by ascending address. An agent reading reserves
+  straight off the chain (`getReserves`/`token0`/`token1`) gets that
+  address-sorted order, not this display order — don't assume they match.
 
 ## Global (every page)
 

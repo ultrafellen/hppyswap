@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "vitest";
 import type { Address } from "viem";
-import { buildPoolRows, dedupeTokenAddresses, type PairInfo } from "../src/lib/pools";
+import { ADDRESSES, USD_ANCHOR } from "@hppyswap/sdk";
+import { buildPoolRows, dedupeTokenAddresses, orderForDisplay, type PairInfo } from "../src/lib/pools";
 import type { TokenMeta } from "../src/hooks/usePools";
 
 const PAIR_A = "0xaaaa000000000000000000000000000000aaaa" as Address;
@@ -68,5 +69,44 @@ describe("buildPoolRows", () => {
 
   it("returns an empty list for no pairs", () => {
     expect(buildPoolRows([], new Map())).toEqual([]);
+  });
+});
+
+describe("orderForDisplay", () => {
+  // Minimal fixtures — only `address` matters to the ranking, but real
+  // callers pass TokenMeta, so shape these the same to catch type drift.
+  const usdce: TokenMeta = { address: USD_ANCHOR.address, symbol: "USDC.e", decimals: 6 };
+  const weth: TokenMeta = { address: ADDRESSES.weth, symbol: "WETH", decimals: 18 };
+  const hpp: TokenMeta = {
+    address: "0xB48334E7938367bC24Fe1F19000D6f06C622E6c7" as Address,
+    symbol: "HPP",
+    decimals: 18,
+  };
+  const unknownA: TokenMeta = { address: "0x1111111111111111111111111111111111111a" as Address, symbol: "AAA", decimals: 18 };
+  const unknownB: TokenMeta = { address: "0x2222222222222222222222222222222222222b" as Address, symbol: "BBB", decimals: 18 };
+
+  it("puts USDC.e last when paired with WETH", () => {
+    expect(orderForDisplay(usdce, weth)).toEqual([weth, usdce]);
+  });
+
+  it("puts USDC.e last when paired with an unranked token", () => {
+    expect(orderForDisplay(usdce, hpp)).toEqual([hpp, usdce]);
+  });
+
+  it("puts WETH last when paired with an unranked token", () => {
+    expect(orderForDisplay(weth, hpp)).toEqual([hpp, weth]);
+  });
+
+  it("keeps the input (address-sorted) order for two unranked tokens", () => {
+    expect(orderForDisplay(unknownA, unknownB)).toEqual([unknownA, unknownB]);
+  });
+
+  it("is case-insensitive when matching the quote addresses", () => {
+    const upperUsdce: TokenMeta = { ...usdce, address: usdce.address.toUpperCase() as Address };
+    expect(orderForDisplay(upperUsdce, weth)).toEqual([weth, upperUsdce]);
+  });
+
+  it("keeps input order when the base-side token is already last (no-op)", () => {
+    expect(orderForDisplay(weth, usdce)).toEqual([weth, usdce]);
   });
 });

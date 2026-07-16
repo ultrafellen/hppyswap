@@ -12,7 +12,7 @@ import { usePair } from "../hooks/usePair";
 import { useLiquidity } from "../hooks/useLiquidity";
 import type { PoolRow, TokenMeta } from "../hooks/usePools";
 import { toPricableToken, useUsdPrice } from "../hooks/useUsdPrices";
-import { buildPoolRows } from "../lib/pools";
+import { buildPoolRows, orderForDisplay } from "../lib/pools";
 import { formatAmount, parseAmount, toPlainAmount } from "../lib/format";
 import { formatUsd, poolTvlE18 } from "../lib/usd";
 import { resolveTokenLogo } from "../lib/tokenIcons";
@@ -22,6 +22,28 @@ const PERCENT_PRESETS = [25, 50, 75, 100] as const;
 // UniswapV2Pair LP tokens are plain 18-decimal ERC20s regardless of the
 // underlying pair's token decimals.
 const LP_DECIMALS = 18;
+
+type DisplayPairing = { base: TokenMeta; quote: TokenMeta; baseReserve: bigint; quoteReserve: bigint };
+
+/**
+ * Reorders a pool's tokens for display as base/quote (lib/pools.ts's
+ * `orderForDisplay` — Uniswap-interface convention: stables and WETH act as
+ * the quote side), pairing each with its matching reserve so the header's
+ * icons/label and the `liq-reserves` line stay consistent with each other.
+ * Purely a presentation helper for the header preview: the add/remove forms
+ * further down this page stay bound to `fetchedPool.token0`/`token1` in
+ * on-chain (address-sorted) order — a display-only reorder here, not an
+ * on-chain-shape change.
+ */
+function pairingForDisplay(pool: PoolRow): DisplayPairing {
+  const [base, quote] = orderForDisplay(pool.token0, pool.token1);
+  return {
+    base,
+    quote,
+    baseReserve: base === pool.token0 ? pool.reserve0 : pool.reserve1,
+    quoteReserve: quote === pool.token0 ? pool.reserve0 : pool.reserve1,
+  };
+}
 
 /**
  * Pool detail page for both routes App.tsx wires to it:
@@ -126,6 +148,7 @@ export function PoolDetailPage() {
   const displayPool =
     fetchedPool ??
     (statePool && routeAddress && statePool.pair.toLowerCase() === routeAddress.toLowerCase() ? statePool : null);
+  const displayPairing = displayPool ? pairingForDisplay(displayPool) : null;
 
   const isLoadingPool =
     pairReadsEnabled &&
@@ -333,14 +356,14 @@ export function PoolDetailPage() {
         <span className="swap-comment">
           {isNewRoute ? (
             "// create a new pool"
-          ) : displayPool ? (
+          ) : displayPairing ? (
             <>
               {"// "}
               <span className="pool-pair-icons">
-                <TokenIcon symbol={displayPool.token0.symbol} logoURI={resolveTokenLogo(displayPool.token0.address)} />
-                <TokenIcon symbol={displayPool.token1.symbol} logoURI={resolveTokenLogo(displayPool.token1.address)} />
+                <TokenIcon symbol={displayPairing.base.symbol} logoURI={resolveTokenLogo(displayPairing.base.address)} />
+                <TokenIcon symbol={displayPairing.quote.symbol} logoURI={resolveTokenLogo(displayPairing.quote.address)} />
               </span>
-              {`${displayPool.token0.symbol}/${displayPool.token1.symbol} pool`}
+              {`${displayPairing.base.symbol}/${displayPairing.quote.symbol} pool`}
             </>
           ) : (
             "// pool detail"
@@ -351,12 +374,12 @@ export function PoolDetailPage() {
         </Link>
       </div>
 
-      {!isNewRoute && displayPool && (
+      {!isNewRoute && displayPairing && (
         <div className="pool-header">
           <p className="pool-reserves-line" data-agent="liq-reserves">
-            reserves: {formatAmount(displayPool.reserve0, displayPool.token0.decimals)} {displayPool.token0.symbol}
+            reserves: {formatAmount(displayPairing.baseReserve, displayPairing.base.decimals)} {displayPairing.base.symbol}
             {" · "}
-            {formatAmount(displayPool.reserve1, displayPool.token1.decimals)} {displayPool.token1.symbol}
+            {formatAmount(displayPairing.quoteReserve, displayPairing.quote.decimals)} {displayPairing.quote.symbol}
           </p>
           <p className="lp-balance-line" data-agent="liq-lp-balance">
             my LP {formatAmount(lpBalance, LP_DECIMALS)} ({sharePercent.toFixed(2)}% share)

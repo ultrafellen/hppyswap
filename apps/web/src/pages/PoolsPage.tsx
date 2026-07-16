@@ -8,6 +8,7 @@ import { TokenIcon } from "../components/TokenIcon";
 import { usePools, type PoolRow } from "../hooks/usePools";
 import { toPricableToken, useUsdPrice } from "../hooks/useUsdPrices";
 import { formatAmount } from "../lib/format";
+import { orderForDisplay } from "../lib/pools";
 import { formatUsd, poolTvlE18 } from "../lib/usd";
 import { resolveTokenLogo } from "../lib/tokenIcons";
 
@@ -19,6 +20,17 @@ function PoolTableRow({ pool, navigate }: { pool: PoolRow; navigate: NavigateFun
   const price0 = useUsdPrice(toPricableToken(pool.token0));
   const price1 = useUsdPrice(toPricableToken(pool.token1));
   const tvlE18 = poolTvlE18(pool.reserve0, pool.token0.decimals, price0, pool.reserve1, pool.token1.decimals, price1);
+
+  // Display order is base/quote (Uniswap-interface convention: stables and
+  // WETH act as the quote side), independent of the on-chain token0/token1
+  // (factory address-sorted) order the rest of this component still uses
+  // for TVL etc. Reserves are reordered to match so "1 WETH · 1,934
+  // USDC.e" reads left-to-right the same as the pair label above it.
+  // `orderForDisplay` returns the same object references it was given, so
+  // reference equality is enough to find each token's matching reserve.
+  const [base, quote] = orderForDisplay(pool.token0, pool.token1);
+  const baseReserve = base === pool.token0 ? pool.reserve0 : pool.reserve1;
+  const quoteReserve = quote === pool.token0 ? pool.reserve0 : pool.reserve1;
 
   // The row itself navigates on click for a large, mouse-friendly hit
   // target, but bails out when the click originated from the pair <Link> so
@@ -36,16 +48,16 @@ function PoolTableRow({ pool, navigate }: { pool: PoolRow; navigate: NavigateFun
       <td className="pool-pair-cell">
         <Link to={to} state={{ pool }} className="pool-pair-link">
           <span className="pool-pair-icons">
-            <TokenIcon symbol={pool.token0.symbol} logoURI={resolveTokenLogo(pool.token0.address)} />
-            <TokenIcon symbol={pool.token1.symbol} logoURI={resolveTokenLogo(pool.token1.address)} />
+            <TokenIcon symbol={base.symbol} logoURI={resolveTokenLogo(base.address)} />
+            <TokenIcon symbol={quote.symbol} logoURI={resolveTokenLogo(quote.address)} />
           </span>
-          {pool.token0.symbol}/{pool.token1.symbol}
+          {base.symbol}/{quote.symbol}
         </Link>
       </td>
       <td className="pool-reserves-cell">
-        {formatAmount(pool.reserve0, pool.token0.decimals)} {pool.token0.symbol}
+        {formatAmount(baseReserve, base.decimals)} {base.symbol}
         {" · "}
-        {formatAmount(pool.reserve1, pool.token1.decimals)} {pool.token1.symbol}
+        {formatAmount(quoteReserve, quote.decimals)} {quote.symbol}
       </td>
       <td className="pool-tvl-cell" data-agent="pool-tvl">
         {tvlE18 != null ? formatUsd(tvlE18) : "—"}

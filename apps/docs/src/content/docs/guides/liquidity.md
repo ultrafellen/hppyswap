@@ -12,10 +12,14 @@ swap page.
 
 The pools list (`hppy.ai/pools`) shows a table of every pair the factory has
 created, up to the first 50 (a `showing first 50 of N pools` note appears
-if there are more). Each row shows the pair (`TOKEN0/TOKEN1`) and both
-reserves. Click anywhere on a row — or the pair link directly — to open
-that pool's detail page. If no pools exist yet, the status line reads
-`no pools yet — be the first: add liquidity`.
+if there are more). Each row shows the pair as `BASE/QUOTE` (e.g.
+`WETH/USDC.e`, `HPP/USDC.e` — stables and WETH act as the quote side) and
+both reserves in that same order. This is a display convention only: the
+pair's on-chain `token0`/`token1` are always address-sorted by the factory,
+so an agent reading reserves directly via RPC gets that address order, not
+this display order. Click anywhere on a row — or the pair link directly —
+to open that pool's detail page. If no pools exist yet, the status line
+reads `no pools yet — be the first: add liquidity`.
 
 ## Create a new pool
 
