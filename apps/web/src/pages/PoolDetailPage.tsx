@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useConnection, useReadContract, useReadContracts } from "wagmi";
 import { isAddress, type Address } from "viem";
-import { DEFAULT_TOKENS, erc20Abi, isDeployed, pairAbi, type TokenInfo } from "@hppyswap/sdk";
+import { DEFAULT_TOKENS, erc20Abi, hpp, isDeployed, pairAbi, type TokenInfo } from "@hppyswap/sdk";
 import { AmountInput } from "../components/AmountInput";
 import { TokenSelect } from "../components/TokenSelect";
 import { TokenIcon } from "../components/TokenIcon";
@@ -390,6 +390,18 @@ export function PoolDetailPage() {
           <p className="pool-position-value-line" data-agent="liq-position-value">
             my position {positionValueE18 != null ? formatUsd(positionValueE18) : "—"}
           </p>
+          {routeAddress && (
+            <p className="pool-explorer-line">
+              <a
+                href={`${hpp.blockExplorers.default.url}/address/${routeAddress}`}
+                target="_blank"
+                rel="noreferrer"
+                data-agent="liq-explorer-link"
+              >
+                history on explorer ↗
+              </a>
+            </p>
+          )}
         </div>
       )}
 

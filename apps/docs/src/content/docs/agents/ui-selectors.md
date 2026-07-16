@@ -121,6 +121,7 @@ app. The concrete instances are [`swap-status`](#swap-), [`pools-status`](#pools
 | `liq-remove-amount` | "X LP" / "select a percent" text | Reflects the currently selected percent's LP amount |
 | `liq-remove-execute` | "remove liquidity ↵" button | Submits the remove-liquidity transaction |
 | `liq-status` | `aria-live` status region | Loading/approve/pending/success/error/not-found text |
+| `liq-explorer-link` | "history on explorer ↗" link | Opens the pair contract's page on `explorer.hpp.io` (full decoded transaction/event history) in a new tab; `/pools/:pairAddress` only |
 
 ## Derived selectors: token picker
 
@@ -141,6 +142,7 @@ Selector additions are backward compatible; renames, removals, or
 behavior changes are not and are logged here with the app version/commit
 they shipped in. Entries are listed newest first.
 
+- v1.5 — added liq-explorer-link (pool detail → pair page on the block explorer)
 - v1.4 — removed the status-line row from the global table: it was never rendered literally; use swap-status / pools-status / liq-status. the underlying pattern (role="status", aria-live="polite") is unchanged
 - v1.3 — pair labels, icons, and reserve text in `pool-row` and `liq-reserves` now render in base/quote display order (stables and WETH last); on-chain token0/token1 order is unchanged and `data-pair` still identifies pools by address
 - v1.2 — added swap-usd-in, swap-usd-out, pool-tvl, liq-position-value
