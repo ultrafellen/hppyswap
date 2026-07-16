@@ -78,12 +78,10 @@ source, not a normalized code.
 
 Reentrancy guards (`UniswapV2: LOCKED`), factory/pair access control
 (`UniswapV2: FORBIDDEN`), `permit` signature checks (`UniswapV2:
-INVALID_SIGNATURE`), and `UniswapV2Router: INVALID_PATH` (an ETH-leg swap
-function called with a `path` whose first/last element isn't `WETH`) exist
-in the vendored contracts but aren't itemized above — none of them should
-occur through normal use of the flows in
-[On-chain integration](/agents/onchain/). See `contracts/src/` in the
-repository for the full set if you're calling something more unusual. The
-three most recent additions (`UniswapV2: INVALID_TO`, `TRANSFER_FAILED`,
-`EXPIRED`) cover all critical pair-level revert paths reachable through the
-router.
+INVALID_SIGNATURE`), `UniswapV2Router: INVALID_PATH` (an ETH-leg swap
+function called with a `path` whose first/last element isn't `WETH`), and
+`UniswapV2: OVERFLOW` (a pool token balance exceeding `2^112 - 1`,
+practically unreachable) exist in the vendored contracts but aren't
+itemized above — none of them should occur through normal use of the flows
+in [On-chain integration](/agents/onchain/). See `contracts/src/` in the
+repository for the full set if you're calling something more unusual.
