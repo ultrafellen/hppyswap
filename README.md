@@ -13,6 +13,12 @@ kinds of users from the ground up: people connecting a wallet through a
 terminal-styled web UI, and AI agents that either call the router contract
 directly or drive that same UI via a documented, stable selector contract.
 
+> **HPPYSwap is an experimental, open-source personal project.** The AMM
+> contracts are a faithful fork of Uniswap V2, but this deployment has not
+> been independently audited, and liquidity is small. It is non-custodial
+> and has no protocol fee — but use it at your own risk, with funds you can
+> afford to lose.
+
 ## Live
 
 - App: [hppy.ai](https://hppy.ai) (also [www.hppy.ai](https://www.hppy.ai))

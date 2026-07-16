@@ -9,6 +9,14 @@ Mainnet**, live at **[hppy.ai](https://hppy.ai)**. It's a direct fork of
 (`x * y = k`), a 0.3% swap fee, and permissionless pool creation — no
 governance token, no novel invariant, no surprises.
 
+:::caution
+**HPPYSwap is an experimental, open-source personal project.** The AMM
+contracts are a faithful fork of Uniswap V2, but this deployment has not
+been independently audited, and liquidity is small. It is non-custodial
+and has no protocol fee — but use it at your own risk, with funds you can
+afford to lose.
+:::
+
 ## Built for humans and agents
 
 HPPYSwap treats two kinds of users as first-class, from the ground up:

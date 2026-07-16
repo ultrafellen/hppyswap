@@ -15,6 +15,9 @@ export const GET: APIRoute = () => {
       {
         name: "HPPYSwap",
         version: 1,
+        status: "experimental",
+        disclaimer:
+          "HPPYSwap is an experimental, open-source personal project. The AMM contracts are a faithful fork of Uniswap V2, but this deployment has not been independently audited, and liquidity is small. It is non-custodial and has no protocol fee — but use it at your own risk, with funds you can afford to lose.",
         app: "https://hppy.ai",
         docs: "https://docs.hppy.ai",
         llms: "https://docs.hppy.ai/llms.txt",
