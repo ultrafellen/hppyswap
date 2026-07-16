@@ -35,6 +35,10 @@ export const GET: APIRoute = () => {
         // from (directly, or bridged through WETH) — no external price API.
         usdAnchor: USD_ANCHOR.address,
         uiSelectorsDoc: "https://docs.hppy.ai/agents/ui-selectors/",
+        errorsDoc: "https://docs.hppy.ai/agents/errors/",
+        tokenlist: "https://docs.hppy.ai/tokenlist.json",
+        abis: "https://docs.hppy.ai/agents/abis.json",
+        skill: "https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex",
       },
       null,
       2,

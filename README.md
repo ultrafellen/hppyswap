@@ -72,9 +72,17 @@ exposed as `aria-live` DOM text, not a spinner or a color.
 
 | Resource | URL |
 |---|---|
+| Agent Skill | [`skills/hppyswap-dex/SKILL.md`](./skills/hppyswap-dex/SKILL.md) |
 | `llms.txt` | `https://docs.hppy.ai/llms.txt` |
 | Agent manifest | `https://docs.hppy.ai/agents/hppyswap.json` |
+| Token list | `https://docs.hppy.ai/tokenlist.json` |
+| ABIs | `https://docs.hppy.ai/agents/abis.json` |
 | UI selector catalog | `https://docs.hppy.ai/agents/ui-selectors/` |
+| Revert dictionary | `https://docs.hppy.ai/agents/errors/` |
+
+An agent (or its author) that wants a ready-to-load skill package instead of
+assembling this itself can start from
+[`skills/hppyswap-dex/SKILL.md`](./skills/hppyswap-dex/SKILL.md).
 
 See [Live](#live) for the deployed URLs.
 

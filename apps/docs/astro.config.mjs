@@ -46,7 +46,7 @@ export default defineConfig({
         },
         {
           label: "For AI Agents",
-          items: ["agents/overview", "agents/onchain", "agents/ui-selectors"],
+          items: ["agents/overview", "agents/onchain", "agents/errors", "agents/ui-selectors"],
         },
       ],
     }),

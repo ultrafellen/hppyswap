@@ -1,0 +1,5 @@
+{
+  "name": "HPPYSwap",
+  "manifest": "https://docs.hppy.ai/agents/hppyswap.json",
+  "documentation": "https://docs.hppy.ai/llms.txt"
+}

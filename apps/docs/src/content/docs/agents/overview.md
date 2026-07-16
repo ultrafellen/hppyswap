@@ -11,15 +11,21 @@ page is the entry point for an agent (or someone building one) landing on
 
 | Resource | URL | What it's for |
 |---|---|---|
+| Agent Skill | [`skills/hppyswap-dex/SKILL.md`](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex) | A distributable [Agent Skill](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex) package — everything on this page condensed into one file an agent can load directly |
 | `llms.txt` | [`/llms.txt`](/llms.txt) | A condensed, link-based index of this documentation tree — the standard [llms.txt](https://llmstxt.org/) convention, generated from the same sidebar structure a human sees |
 | `llms-full.txt` | [`/llms-full.txt`](/llms-full.txt) | The full content of every doc page concatenated into one plain-text file — no link-following required, everything in one context load |
 | Agent manifest | [`/agents/hppyswap.json`](/agents/hppyswap.json) | Machine-readable JSON: chain info, deployment status, contract addresses, default tokens, and links back to this docs site — see below |
+| Token list | [`/tokenlist.json`](/tokenlist.json) | `DEFAULT_TOKENS` in the [Uniswap Token List](https://github.com/Uniswap/token-lists) schema, for wallets/tooling that consume that format directly |
+| ABIs | [`/agents/abis.json`](/agents/abis.json) | `factory`/`router`/`pair`/`weth`/`erc20` ABI arrays as plain JSON, for agents without a TypeScript toolchain to import `@hppyswap/sdk` |
 | Selector catalog | [`/agents/ui-selectors/`](/agents/ui-selectors/) | Every `data-agent` selector in the web app, for agents driving the UI instead of calling contracts directly |
+| Revert dictionary | [`/agents/errors/`](/agents/errors/) | Every revert string the contracts throw, what threw it, and how an agent should respond |
 
 Fetch `/agents/hppyswap.json` first if you need machine-parseable facts
 (is it deployed? what's the router address? what chain?). Fetch
 `/llms.txt` or `/llms-full.txt` if you need the documentation content
-itself in a form suited to a language model's context window.
+itself in a form suited to a language model's context window. Loading a
+single file instead? Start from the [Agent Skill](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex)
+package, which links back to all of the above.
 
 ## Two ways to trade
 
@@ -33,7 +39,8 @@ managing liquidity on HPPYSwap — pick whichever fits your setup:
    right choice for an agent that already holds keys and signs
    transactions programmatically, with no browser involved. See
    [On-chain integration](/agents/onchain/) for a worked example, including
-   the slippage and deadline conventions the web app itself uses.
+   the slippage and deadline conventions the web app itself uses, and the
+   [revert dictionary](/agents/errors/) if a call reverts.
 
 2. **Drive the UI.** If your agent operates via browser automation
    (clicking, typing, reading rendered text — no direct key access), every
@@ -53,7 +60,8 @@ UI whose structure is documented and versioned instead of implicit.
 
 ## What's not here (yet)
 
-There is no MCP server and no public HTTP API beyond the static manifest
-and `llms.txt` endpoints in the MVP. Both paths above work with only a
-wallet/signer (path 1) or a browser (path 2) — no HPPYSwap-specific
-backend integration is required either way.
+There is no MCP server and no public HTTP API beyond the static endpoints
+listed in [Start here](#start-here) (manifest, token list, ABIs, `llms.txt`)
+in the MVP. Both paths above work with only a wallet/signer (path 1) or a
+browser (path 2) — no HPPYSwap-specific backend integration is required
+either way.
