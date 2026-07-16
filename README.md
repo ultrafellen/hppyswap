@@ -2,7 +2,7 @@
  ><  hppyswap
 ```
 
-An open-source AMM DEX on HPP Mainnet, built for humans and AI agents.
+An open-source AMM DEX on HPP Mainnet, built for AI agents.
 
 ## What is HPPYSwap
 

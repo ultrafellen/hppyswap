@@ -135,10 +135,10 @@ opened it:
 
 Selector additions are backward compatible; renames, removals, or
 behavior changes are not and are logged here with the app version/commit
-they shipped in.
+they shipped in. Entries are listed newest first.
 
-- v1.2 — added swap-usd-in, swap-usd-out, pool-tvl, liq-position-value
 - v1.3 — pair labels, icons, and reserve text in `pool-row` and `liq-reserves` now render in base/quote display order (stables and WETH last); on-chain token0/token1 order is unchanged and `data-pair` still identifies pools by address
+- v1.2 — added swap-usd-in, swap-usd-out, pool-tvl, liq-position-value
 - v1.1 — added token-option, token-import-confirm, swap-max, settings-reset
 - **v1 — initial catalog** (2026-07-15). The full set of selectors listed
   above, covering the swap page, pools list, and pool detail page — the
