@@ -53,7 +53,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
       <main>{children}</main>
       <footer className="site-footer">
-        built for humans &amp; agents ·{" "}
+        built for agents ·{" "}
         <a href={AGENTS_DOCS_URL} target="_blank" rel="noreferrer">
           docs.hppy.ai/agents
         </a>
