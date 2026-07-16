@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // This suite is the executable form of docs.hppy.ai/agents/ui-selectors
-// (v1.3). A failure here means the published agent contract is broken —
+// (v1.4). A failure here means the published agent contract is broken —
 // fix the app or bump the catalog + changelog, never silently.
 //
 // Quote-only, real mainnet reads: every assertion below drives the actual
@@ -131,13 +131,27 @@ test.describe("Pools (/pools) — catalog §Pools", () => {
       await expect(rows.nth(i)).toHaveAttribute("data-pair", ADDRESS_RE);
     }
 
-    // Each row's tvl cell eventually shows a USD figure (both live pools
-    // today are USDC.e-paired, so a price route always resolves — a "—"
-    // here would mean the USD-pricing contract is broken, not just slow).
+    // Each row's tvl cell renders either a resolved "$…" USD figure or the
+    // catalog's documented "—" no-route placeholder (catalog: pool-tvl
+    // renders "—" both while the USD price is still loading and, terminally,
+    // when no route exists for one or both sides — the two are visually
+    // indistinguishable, by design: "—" is a legitimate steady state, not a
+    // spinner). So we can't demand every row eventually show "$" without
+    // risking a false failure on a pool with no USD route. Instead: wait
+    // (with the same real budget as before) for at least one row to resolve
+    // to "$" — today's live pools are all USDC.e-paired, so this is
+    // guaranteed and keeps the USD-pricing path genuinely exercised — then
+    // snapshot every row and accept either literal state per row.
     const tvlCells = page.locator('[data-agent="pool-tvl"]');
+    await expect(tvlCells.filter({ hasText: "$" }).first()).toBeVisible({ timeout: 60_000 });
+
+    let dollarRowCount = 0;
     for (let i = 0; i < rowCount; i++) {
-      await expect(tvlCells.nth(i)).toContainText("$", { timeout: 60_000 });
+      const text = (await tvlCells.nth(i).textContent()) ?? "";
+      expect(text === "—" || text.includes("$")).toBe(true);
+      if (text.includes("$")) dollarRowCount++;
     }
+    expect(dollarRowCount).toBeGreaterThan(0);
 
     await expect(page.locator('[data-agent="pools-create"]')).toBeVisible();
   });

@@ -59,10 +59,14 @@ or visible text (which can change for purely cosmetic reasons).
 | `nav-pools` | "pools" nav link | Navigate to `/pools` |
 | `nav-docs` | "docs" nav link (external) | Opens `docs.hppy.ai` in a new tab |
 | `theme-toggle` | Light/dark toggle button | Toggles `--theme`, persisted to `localStorage` |
-| `status-line` | Default status region (`role="status"`, `aria-live="polite"`) | Fallback selector on the shared `StatusLine` component; each page below overrides it with a page-specific name (`swap-status`, `pools-status`, `liq-status`) — treat those as the concrete selectors, this as the underlying pattern |
 | `wallet-connect` | "connect ▾" button | Shown when disconnected; opens the connector picker |
 | `wallet-switch-chain` | "switch to hpp" button | Shown when connected to the wrong chain |
 | `wallet-disconnect` | "disconnect" button | Shown when connected to HPP Mainnet, next to the truncated address |
+
+The shared status component pattern is a `role="status"`, `aria-live="polite"`
+region; there is no literal `status-line` selector rendered anywhere in the
+app. The concrete instances are [`swap-status`](#swap-), [`pools-status`](#pools-pools),
+[`liq-status`](#pool-detail-poolspairaddress-poolsnew).
 
 ## Swap (`/`)
 
@@ -137,6 +141,7 @@ Selector additions are backward compatible; renames, removals, or
 behavior changes are not and are logged here with the app version/commit
 they shipped in. Entries are listed newest first.
 
+- v1.4 — removed the status-line row from the global table: it was never rendered literally; use swap-status / pools-status / liq-status. the underlying pattern (role="status", aria-live="polite") is unchanged
 - v1.3 — pair labels, icons, and reserve text in `pool-row` and `liq-reserves` now render in base/quote display order (stables and WETH last); on-chain token0/token1 order is unchanged and `data-pair` still identifies pools by address
 - v1.2 — added swap-usd-in, swap-usd-out, pool-tvl, liq-position-value
 - v1.1 — added token-option, token-import-confirm, swap-max, settings-reset

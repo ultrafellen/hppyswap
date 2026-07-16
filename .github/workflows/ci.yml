@@ -54,3 +54,9 @@ jobs:
       - run: npx playwright install chromium --with-deps
         working-directory: apps/web
       - run: pnpm --filter hppyswap-web test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-traces
+          path: apps/web/test-results/
+          retention-days: 7
