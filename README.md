@@ -89,6 +89,9 @@ pnpm -r typecheck   # tsc --noEmit, per workspace (docs included — a scoped ts
 pnpm -r test        # vitest run, per workspace
 pnpm -r build       # tsc + vite build / astro build / tsc --noEmit
 
+# apps/web e2e (Playwright, docs.hppy.ai/agents/ui-selectors as assertions) — builds first, then hits the real HPP Mainnet RPC
+cd apps/web && pnpm build && pnpm test:e2e
+
 # Contracts (Foundry, from contracts/)
 cd contracts
 forge build

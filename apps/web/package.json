@@ -9,6 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "preview": "vite preview",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
@@ -21,6 +23,7 @@
     "wagmi": "3.7.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.3",

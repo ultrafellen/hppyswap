@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       contracts: ${{ steps.f.outputs.contracts }}
+      web: ${{ steps.f.outputs.web }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -16,6 +17,7 @@ jobs:
         with:
           filters: |
             contracts: ['contracts/**', '.github/workflows/ci.yml']
+            web: ['apps/web/**', 'packages/sdk/**', 'pnpm-lock.yaml', '.github/workflows/ci.yml']
   js:
     runs-on: ubuntu-latest
     steps:
@@ -38,3 +40,17 @@ jobs:
         working-directory: contracts
       - run: forge test -vv
         working-directory: contracts
+  e2e:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter hppyswap-web... build
+      - run: npx playwright install chromium --with-deps
+        working-directory: apps/web
+      - run: pnpm --filter hppyswap-web test:e2e
