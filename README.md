@@ -80,10 +80,6 @@ exposed as `aria-live` DOM text, not a spinner or a color.
 | UI selector catalog | `https://docs.hppy.ai/agents/ui-selectors/` |
 | Revert dictionary | `https://docs.hppy.ai/agents/errors/` |
 
-An agent (or its author) that wants a ready-to-load skill package instead of
-assembling this itself can start from
-[`skills/hppyswap-dex/SKILL.md`](./skills/hppyswap-dex/SKILL.md).
-
 See [Live](#live) for the deployed URLs.
 
 ## Development

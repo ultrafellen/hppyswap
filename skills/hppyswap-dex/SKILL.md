@@ -68,7 +68,9 @@ browser involved. Router: `0x661aA4D2B0e3348125DEe6E75A28aD8E1e66f8a7`.
 
 Minimal viem sketch (mirrors `apps/web/src/hooks/useSwap.ts` and the full
 example at [`/agents/onchain/`](https://docs.hppy.ai/agents/onchain/) —
-treat that page as authoritative if this ever drifts):
+treat that page as authoritative if this ever drifts). **Note:** This sketch
+omits the `isDeployed()` check from step 1 for brevity; production use must
+include it.
 
 ```ts
 import { createPublicClient, createWalletClient, http } from "viem";

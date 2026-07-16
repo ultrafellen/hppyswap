@@ -38,7 +38,7 @@ export const GET: APIRoute = () => {
         errorsDoc: "https://docs.hppy.ai/agents/errors/",
         tokenlist: "https://docs.hppy.ai/tokenlist.json",
         abis: "https://docs.hppy.ai/agents/abis.json",
-        skill: "https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex",
+        skill: "https://raw.githubusercontent.com/ultrafellen/hppyswap/main/skills/hppyswap-dex/SKILL.md",
       },
       null,
       2,

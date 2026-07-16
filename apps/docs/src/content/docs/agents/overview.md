@@ -11,7 +11,7 @@ page is the entry point for an agent (or someone building one) landing on
 
 | Resource | URL | What it's for |
 |---|---|---|
-| Agent Skill | [`skills/hppyswap-dex/SKILL.md`](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex) | A distributable [Agent Skill](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex) package — everything on this page condensed into one file an agent can load directly |
+| Agent Skill | [`skills/hppyswap-dex/SKILL.md`](https://raw.githubusercontent.com/ultrafellen/hppyswap/main/skills/hppyswap-dex/SKILL.md) | A distributable [Agent Skill](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex) package — everything on this page condensed into one file an agent can load directly ([browse](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex)) |
 | `llms.txt` | [`/llms.txt`](/llms.txt) | A condensed, link-based index of this documentation tree — the standard [llms.txt](https://llmstxt.org/) convention, generated from the same sidebar structure a human sees |
 | `llms-full.txt` | [`/llms-full.txt`](/llms-full.txt) | The full content of every doc page concatenated into one plain-text file — no link-following required, everything in one context load |
 | Agent manifest | [`/agents/hppyswap.json`](/agents/hppyswap.json) | Machine-readable JSON: chain info, deployment status, contract addresses, default tokens, and links back to this docs site — see below |
@@ -24,8 +24,8 @@ Fetch `/agents/hppyswap.json` first if you need machine-parseable facts
 (is it deployed? what's the router address? what chain?). Fetch
 `/llms.txt` or `/llms-full.txt` if you need the documentation content
 itself in a form suited to a language model's context window. Loading a
-single file instead? Start from the [Agent Skill](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex)
-package, which links back to all of the above.
+single file instead? Start from the [Agent Skill](https://raw.githubusercontent.com/ultrafellen/hppyswap/main/skills/hppyswap-dex/SKILL.md)
+package, which links back to all of the above ([browse](https://github.com/ultrafellen/hppyswap/tree/main/skills/hppyswap-dex)).
 
 ## Two ways to trade
 

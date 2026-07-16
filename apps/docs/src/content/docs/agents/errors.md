@@ -54,6 +54,9 @@ does.
 | `UniswapV2: INSUFFICIENT_LIQUIDITY_MINTED` | `addLiquidity`'s deposit was too small relative to existing supply to mint any LP tokens (rounds to zero) | Increase the deposit size, or check `totalSupply()`/reserves first if depositing a very small amount into a large pool |
 | `UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED` | `removeLiquidity`'s LP amount was too small relative to `totalSupply()` to redeem any underlying tokens (rounds to zero) | Increase the LP amount being burned, e.g. via the UI's percent-of-balance presets rather than a small fixed amount |
 | `UniswapV2: K` | The constant-product invariant (`x * y = k`, fee-adjusted) didn't hold after the swap — the router computed an input/output pair that doesn't balance, almost always a symptom of a stale quote or a bug in a caller that bypasses the router's own math | Re-quote via `getAmountsOut`/`getAmountsIn` immediately before building the transaction; don't reuse a quote that's more than a few blocks old |
+| `UniswapV2: INVALID_TO` | The swap recipient equals one of the pool's tokens (checked in `Pair.swap()`) — transfers to token addresses are forbidden | Use a different `to` address as the swap recipient; never specify a token address as the output destination |
+| `UniswapV2: TRANSFER_FAILED` | A pool token's `transfer()` returned false or reverted during swap/burn (checked in `Pair._safeTransfer()`) — the token may be non-standard or paused | Investigate the token contract; check if it's paused, frozen, or uses non-standard transfer semantics before retrying |
+| `UniswapV2: EXPIRED` | The permit deadline passed (checked in `UniswapV2ERC20.permit()`, inherited by Pair) — reachable via the router's `removeLiquidity*WithPermit` functions | Generate a fresh permit signature with a later deadline; **note: this is DISTINCT from `UniswapV2Router: EXPIRED`** — exact-match lookups must not confuse them |
 
 ## `TransferHelper`
 
@@ -80,4 +83,7 @@ function called with a `path` whose first/last element isn't `WETH`) exist
 in the vendored contracts but aren't itemized above — none of them should
 occur through normal use of the flows in
 [On-chain integration](/agents/onchain/). See `contracts/src/` in the
-repository for the full set if you're calling something more unusual.
+repository for the full set if you're calling something more unusual. The
+three most recent additions (`UniswapV2: INVALID_TO`, `TRANSFER_FAILED`,
+`EXPIRED`) cover all critical pair-level revert paths reachable through the
+router.
