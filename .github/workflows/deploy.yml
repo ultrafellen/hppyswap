@@ -17,7 +17,7 @@ permissions:
   contents: read
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       web: ${{ steps.f.outputs.web }}
       docs: ${{ steps.f.outputs.docs }}
@@ -33,7 +33,7 @@ jobs:
   # see contracts/README.md), so this only needs to cover the JS workspaces
   # that deploy-web/deploy-docs are about to ship.
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -45,7 +45,7 @@ jobs:
   deploy-web:
     needs: [changes, verify]
     if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -61,7 +61,7 @@ jobs:
   deploy-docs:
     needs: [changes, verify]
     if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.docs == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

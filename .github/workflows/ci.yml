@@ -6,7 +6,7 @@ permissions:
   contents: read
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       contracts: ${{ steps.f.outputs.contracts }}
       web: ${{ steps.f.outputs.web }}
@@ -19,7 +19,7 @@ jobs:
             contracts: ['contracts/**', '.github/workflows/ci.yml']
             web: ['apps/web/**', 'packages/sdk/**', 'pnpm-lock.yaml', '.github/workflows/ci.yml']
   js:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -32,7 +32,7 @@ jobs:
   contracts:
     needs: changes
     if: needs.changes.outputs.contracts == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: foundry-rs/foundry-toolchain@v1
@@ -43,7 +43,7 @@ jobs:
   e2e:
     needs: changes
     if: needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
