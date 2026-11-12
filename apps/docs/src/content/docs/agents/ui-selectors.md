@@ -27,7 +27,16 @@ or visible text (which can change for purely cosmetic reasons).
   `[data-agent="swap-status"]`'s text content sees exactly what a screen
   reader user hears: `"approving token spend…"`, `"swap complete"`, a
   specific error string, or (most of the time) empty text when there's
-  nothing to report. The price-impact warning follows the same rule: above
+  nothing to report. While a network wait is in progress the region also
+  carries `aria-busy="true"` and shows a spinner plus a ticking
+  `· Ns` elapsed counter; the spinner and counter are `aria-hidden`, so
+  the region's announced text stays the plain message — strip a trailing
+  `· Ns` if you compare `textContent` exactly.
+- **Loading is text, too.** While RPC reads are in flight, values render
+  explicit placeholder text instead of `"—"`: `swap-amount-out`'s
+  placeholder and `swap-quote-line`'s value read `quoting…`, and the sell
+  balance reads `balance loading…`. The global `rpc-status` pill (below)
+  summarizes all RPC activity in one place. The price-impact warning follows the same rule: above
   5% impact, `[data-agent="swap-impact"]`'s text includes a literal
   `⚠ high impact` marker appended to the percentage — an agent doesn't need
   to parse color or CSS classes to detect it.
@@ -58,10 +67,12 @@ or visible text (which can change for purely cosmetic reasons).
 | `nav-swap` | "swap" nav link | Navigate to `/` |
 | `nav-pools` | "pools" nav link | Navigate to `/pools` |
 | `nav-docs` | "docs" nav link (external) | Opens `docs.hppy.ai` in a new tab |
-| `theme-toggle` | Light/dark toggle button | Toggles `--theme`, persisted to `localStorage` |
-| `wallet-connect` | "connect ▾" button | Shown when disconnected; opens the connector picker |
-| `wallet-switch-chain` | "switch to hpp" button | Shown when connected to the wrong chain |
-| `wallet-disconnect` | "disconnect" button | Shown when connected to HPP Mainnet, next to the truncated address |
+| `rpc-status` | RPC status pill (header) | Text + `data-state`: `hpp mainnet` (`idle`), `loading rpc… Ns` (`loading`, after 300 ms of in-flight reads), `rpc slow… Ns` (`slow`, after 4 s), or `rpc error` (`error`, the last read failed at the transport level). Wait for `data-state="idle"` before trusting freshly read values |
+| `wallet-connect` | "connect ▾" button | Shown when disconnected; opens the connector picker. Disabled and labeled `connecting…` / `reconnecting…` while a connection is in progress |
+| `wallet-option` | `<button>` per wallet in the open picker | One per EIP-6963 wallet the browser announced, with the wallet's own icon and name as its text — pick by text (e.g. `MetaMask`), not by position |
+| `wallet-install` | Install / open-in-wallet link in the open picker | Only when no wallet was detected: `get MetaMask ↗` / `get Rabby ↗` / `get Coinbase Wallet ↗` on desktop; `open in MetaMask` / `open in Coinbase Wallet` deep links on mobile |
+| `wallet-switch-chain` | "switch to hpp" button | Shown when connected to the wrong chain (with `wallet-disconnect` beside it). While shown, `swap-execute` / `liq-add-execute` / `liq-remove-execute` stay disabled and the page's status region reads `wallet is on the wrong network — switch to HPP Mainnet` |
+| `wallet-disconnect` | "disconnect" button | Shown when connected (next to the wallet icon and truncated address), and next to `wallet-switch-chain` on the wrong chain |
 
 The shared status component pattern is a `role="status"`, `aria-live="polite"`
 region; there is no literal `status-line` selector rendered anywhere in the
@@ -75,16 +86,16 @@ app. The concrete instances are [`swap-status`](#swap-), [`pools-status`](#pools
 | `swap-amount-in` | Sell amount `<input>` | Type the amount to sell |
 | `swap-usd-in` | Sell-side USD line | Text: `~$1,934.21`-style USD conversion of the typed sell amount, USDC.e-anchored (see [Deriving USD prices](/agents/onchain/#deriving-usd-prices)); empty text when no amount is typed or no USD price route is known |
 | `swap-max` | "max" button | Fills the sell amount with the connected wallet's full balance of the sell token |
-| `swap-amount-out` | Buy amount `<input>` (read-only) | Shows the live router quote for the sell amount |
+| `swap-amount-out` | Buy amount `<input>` (read-only) | Shows the live router quote for the sell amount; placeholder reads `quoting…` while the quote is loading |
 | `swap-usd-out` | Buy-side USD line | Same convention as `swap-usd-in`, for the quoted buy amount |
 | `swap-token-in` | Sell token select trigger | Opens the token picker for the sell side |
 | `swap-token-out` | Buy token select trigger | Opens the token picker for the buy side |
 | `swap-direction-flip` | "↓" button | Swaps sell/buy tokens and clears the amount |
-| `swap-quote-line` | Quote row container | Text: `1 TOKEN_IN = X TOKEN_OUT` |
+| `swap-quote-line` | Quote row container | Text: `1 TOKEN_IN = X TOKEN_OUT`; `quoting…` while the first quote for the current input is loading |
 | `swap-impact` | Price impact value text | Percentage; includes `⚠ high impact` in its text above 5% |
 | `swap-route` | Route row container | Text: `direct (TOKEN_IN/TOKEN_OUT)` when a direct pool exists, else `via BASE_SYMBOL` for a 2-hop route through a route base (e.g. `via USDC.e`) — capped at one intermediate hop |
 | `swap-execute` | Execute button | Label toggles to "confirm high impact" above 15% impact (click twice) |
-| `swap-status` | `aria-live` status region | Approve/pending/success/error text; see [the contract](#the-contract) |
+| `swap-status` | `aria-live` status region | Approve/pending/success/error/wrong-network text; see [the contract](#the-contract) |
 | `settings-trigger` | "slippage X% ⚙" button | Opens the slippage/deadline/RPC settings panel |
 | `settings-slippage` | Slippage tolerance `<input>` (bps) | Basis points, e.g. `50` = 0.5%. Default 50 |
 | `settings-deadline` | Deadline `<input>` (minutes) | Minutes from now. Default 20 |
@@ -142,6 +153,7 @@ Selector additions are backward compatible; renames, removals, or
 behavior changes are not and are logged here with the app version/commit
 they shipped in. Entries are listed newest first.
 
+- v1.6 — removed theme-toggle (the app is dark-only now; `hppyswap.theme` in `localStorage` is no longer read). added rpc-status, wallet-option, wallet-install. swap-status / liq-status gain `aria-busy` with a spinner and `· Ns` elapsed counter during network waits, and a wrong-network message; the execute buttons stay disabled on the wrong chain
 - v1.5 — added liq-explorer-link (pool detail → pair page on the block explorer)
 - v1.4 — removed the status-line row from the global table: it was never rendered literally; use swap-status / pools-status / liq-status. the underlying pattern (role="status", aria-live="polite") is unchanged
 - v1.3 — pair labels, icons, and reserve text in `pool-row` and `liq-reserves` now render in base/quote display order (stables and WETH last); on-chain token0/token1 order is unchanged and `data-pair` still identifies pools by address

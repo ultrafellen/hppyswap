@@ -143,7 +143,9 @@ Core swap-flow selectors:
 | `swap-route` | Text: `direct (...)` or `via BASE_SYMBOL` for a 2-hop route |
 | `swap-impact` | Price-impact percentage; includes a literal `⚠ high impact` marker above 5% |
 | `swap-execute` | Submits the swap; label toggles to "confirm high impact" above 15% impact (click twice) |
-| `swap-status` | `aria-live` region — read this text to know what happened: approving / pending / success / a specific error string |
+| `swap-status` | `aria-live` region — read this text to know what happened: approving / pending / success / wrong network / a specific error string (a trailing `· Ns` is just an elapsed counter) |
+| `rpc-status` | Header pill; `data-state` is `idle` / `loading` / `slow` / `error` — wait for `idle` before reading freshly loaded values |
+| `wallet-connect` → `wallet-option` | Open the wallet picker, then click the option whose text is the wallet's name |
 
 ## Safety rules
 

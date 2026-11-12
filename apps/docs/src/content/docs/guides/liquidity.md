@@ -71,7 +71,10 @@ already have enough allowance.
 
 Every action on this page reports through a single status line at the
 bottom (`liq-status`, an `aria-live="polite"` region): pool loading,
-approval/pending progress, `liquidity updated` on success, or a
-human-readable error (e.g. wallet rejection, slippage revert) on failure.
+approval/pending progress (with a spinner and an elapsed-seconds counter),
+`liquidity updated` on success, or a human-readable error (e.g. wallet
+rejection, slippage revert) on failure. If your wallet is on another
+network, the add/remove buttons stay disabled and the status line reads
+`wallet is on the wrong network — switch to HPP Mainnet`.
 If contracts aren't deployed yet on the current chain, every form is
 replaced by `contracts not deployed yet — see docs.hppy.ai`.

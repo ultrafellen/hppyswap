@@ -7,11 +7,15 @@ This walks through a swap on the HPPYSwap web app (`hppy.ai`, the `/` route
 — the `swap` tab in the nav). No screenshots yet; the UI is a lowercase,
 terminal-styled single card.
 
-1. **Connect a wallet.** Click **connect ▾** in the top-right nav. Pick a
-   detected wallet from the list. If your wallet is on a different chain,
-   the button changes to **switch to hpp** — click it to switch (see
-   [Connect to HPP](/connect-to-hpp/)). Once connected, the button shows
-   your truncated address (e.g. `0x12…ab34`) and a **disconnect** button.
+1. **Connect a wallet.** Click **connect ▾** in the top-right nav. Pick
+   your wallet — each detected wallet is listed with its own icon — and
+   approve the request in the wallet. If your wallet is on a different
+   chain, the button changes to **switch to hpp** — click it to switch (see
+   [Connect to HPP](/connect-to-hpp/)); swapping stays disabled until you
+   do. Once connected, the nav shows your wallet's icon, your truncated
+   address (e.g. `0x12…ab34`) and a **disconnect** button. The pill to the
+   left of it (`● hpp mainnet`) turns into `loading rpc…` whenever the app
+   is waiting on the network.
 
 2. **Pick the token you're selling.** In the `> sell` row, click the token
    button (shows the current symbol and `▾`, or `select token ▾` if none is
@@ -23,12 +27,12 @@ terminal-styled single card.
 3. **Enter an amount.** Type into the amount field next to the sell token.
    Only digits and a single decimal point are accepted, capped at the
    token's decimal precision. Your balance for the selected token is shown
-   just below (`balance … `); click **max** to fill the field with your
-   full balance.
+   just below (`balance … `, or `balance loading…` while it's being read);
+   click **max** to fill the field with your full balance.
 
 4. **Pick the token you're buying** the same way in the `> buy` row. That
    field is read-only — it always shows the router's live quote for your
-   sell amount, not something you type into. Use the **↓** flip button
+   sell amount (`quoting…` while it loads), not something you type into. Use the **↓** flip button
    between the two rows to swap the sell/buy sides instantly — it clears
    the amount field rather than carrying it over, since a quote for the
    old pair rarely makes sense for the new one.
@@ -58,7 +62,9 @@ terminal-styled single card.
    first prompt for an **approve** transaction — the status line below the
    button shows `approving token spend…` while that's pending, then
    `swap pending — waiting for confirmation…` once the swap transaction
-   itself is submitted, and finally `swap complete` on success.
+   itself is submitted, and finally `swap complete` on success. While
+   waiting, a spinner and an elapsed counter (`· 6s`) show the wait is
+   still progressing — HPP Mainnet blocks average ~11 seconds.
 
 8. **High-impact trades require confirmation.** If price impact exceeds
    **15%**, the execute button's label changes to **confirm high impact**

@@ -32,11 +32,39 @@ custom network by hand:
 
 ## Let the app do it for you
 
+Click **connect ▾** in the top-right of the app. The picker lists every
+wallet your browser has installed (via [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963)),
+each with its own icon, and asks the wallet to connect straight to HPP
+Mainnet. If no wallet is detected, the picker links to MetaMask, Rabby and
+Coinbase Wallet instead — or, on a phone, offers to open the page inside
+the MetaMask or Coinbase Wallet app's built-in browser.
+
 If your wallet is connected to HPPYSwap but on a different chain, the wallet
-button in the top-right of the app switches to a **switch to hpp** prompt
+button switches to a **switch to hpp** prompt
 (`data-agent="wallet-switch-chain"`). Clicking it calls your wallet's
 `wallet_switchEthereumChain` (falling back to `wallet_addEthereumChain` if
 the wallet doesn't know about HPP Mainnet yet) — no manual entry required.
+
+## Wrong-network protection
+
+Until the wallet is on HPP Mainnet, the swap and liquidity buttons stay
+disabled and the status line reads
+`wallet is on the wrong network — switch to HPP Mainnet`. Every transaction
+the app sends is also pinned to chain ID `190415`: if the wallet changes
+networks between clicking and signing, the request is rejected before it
+reaches the wallet rather than being sent to the same address on another
+chain.
+
+## Loading and RPC status
+
+The pill next to **connect** shows what the public RPC is doing:
+`● hpp mainnet` when idle, `loading rpc… Ns` while reads are in flight,
+`rpc slow… Ns` once a read has taken more than 4 seconds, and `rpc error`
+if requests are failing. HPP Mainnet blocks land roughly every ~11 seconds,
+so confirming a transaction usually takes a few seconds up to a block or
+two; the status line under the execute button shows a spinner and an
+elapsed-seconds counter (`swap pending — waiting for confirmation… · 6s`)
+for the whole wait.
 
 ## Public RPC rate limits
 
@@ -44,5 +72,6 @@ the wallet doesn't know about HPP Mainnet yet) — no manual entry required.
 heavy usage. HPPYSwap batches its read calls via Multicall3
 (`0xcA11bde05977b3631167028862bE2a173976CA11`) to minimize round trips, and
 the app's settings panel (⚙, `data-agent="settings-rpc"`) lets you override
-the RPC URL with your own endpoint if you run into limits. A custom RPC URL
+the RPC URL with your own endpoint if you run into limits or the status
+pill keeps showing `rpc slow` / `rpc error`. A custom RPC URL
 change requires a page reload to take effect.
