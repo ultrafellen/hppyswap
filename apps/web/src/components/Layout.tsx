@@ -1,34 +1,14 @@
 // SPDX-License-Identifier: MIT
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Logo } from "./Logo";
 import { ConnectButton } from "./ConnectButton";
-import { applyTheme, persistTheme, readStoredTheme, toggleTheme } from "../lib/theme";
+import { RpcIndicator } from "./RpcIndicator";
 
 const DOCS_URL = "https://docs.hppy.ai";
 // Points at the real page directly (belt and braces alongside the
 // astro.config.mjs `/agents` -> `/agents/overview` redirect).
 const AGENTS_DOCS_URL = "https://docs.hppy.ai/agents/overview/";
-
-function ThemeToggle() {
-  // The pre-paint inline script in index.html already applied the stored
-  // theme to <html> before React mounted, so reading storage here (rather
-  // than the DOM) reflects the same value and keeps this component pure.
-  const [theme, setTheme] = useState(readStoredTheme);
-
-  const handleToggle = () => {
-    const next = toggleTheme(theme);
-    applyTheme(next);
-    persistTheme(next);
-    setTheme(next);
-  };
-
-  return (
-    <button type="button" className="theme-toggle" data-agent="theme-toggle" onClick={handleToggle}>
-      {theme === "light" ? "light" : "dark"}
-    </button>
-  );
-}
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
@@ -46,7 +26,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <a href={DOCS_URL} target="_blank" rel="noreferrer" data-agent="nav-docs">
               docs
             </a>
-            <ThemeToggle />
+            <RpcIndicator />
             <ConnectButton />
           </div>
         </nav>

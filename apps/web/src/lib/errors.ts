@@ -14,6 +14,12 @@ const SUBSTRING_MAP: ReadonlyArray<readonly [string, string]> = [
   ["TransferHelper: TRANSFER_FROM_FAILED", "token transfer failed — check your token balance and allowance"],
   ["approval transaction reverted", "token approval failed — try again"],
   ["insufficient funds", "insufficient funds for this transaction"],
+  ["ChainMismatchError", "wallet is on the wrong network — switch to HPP Mainnet"],
+  ["does not match the target chain", "wallet is on the wrong network — switch to HPP Mainnet"],
+  ["ResourceUnavailableRpcError", "a wallet request is already open — check your wallet"],
+  ["already pending", "a wallet request is already open — check your wallet"],
+  ["ConnectorNotConnectedError", "wallet disconnected — reconnect and try again"],
+  ["ProviderNotFoundError", "wallet not found — is the extension installed and unlocked?"],
 ];
 
 function collectStrings(e: unknown, seen: Set<unknown> = new Set()): string[] {
@@ -30,18 +36,23 @@ function collectStrings(e: unknown, seen: Set<unknown> = new Set()): string[] {
   return strings;
 }
 
-/** Turns any thrown value from the swap flow into a user-facing sentence. */
-export function humanizeError(e: unknown): string {
+/** True when the user dismissed/rejected the request in their wallet. */
+export function isUserRejection(e: unknown): boolean {
+  return collectStrings(e).some((s) => s === "UserRejectedRequestError" || /user rejected/i.test(s));
+}
+
+/**
+ * Turns any thrown value from the swap/liquidity/connect flows into a
+ * user-facing sentence. `fallback` is the copy for an unrecognized error.
+ */
+export function humanizeError(e: unknown, fallback = "transaction failed — see console for details"): string {
+  if (isUserRejection(e)) return "transaction rejected in wallet";
+
   const strings = collectStrings(e);
-
-  if (strings.some((s) => s === "UserRejectedRequestError" || /user rejected/i.test(s))) {
-    return "transaction rejected in wallet";
-  }
-
   const haystack = strings.join("\n");
   for (const [needle, message] of SUBSTRING_MAP) {
     if (haystack.includes(needle)) return message;
   }
 
-  return "transaction failed — see console for details";
+  return fallback;
 }

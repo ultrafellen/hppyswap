@@ -115,7 +115,7 @@ export function PoolsPage() {
       </div>
 
       {isLoading ? (
-        <StatusLine message="loading pools…" tone="info" dataAgent="pools-status" />
+        <StatusLine message="loading pools…" tone="info" busy dataAgent="pools-status" />
       ) : pools.length === 0 ? (
         <StatusLine
           message="no pools yet — be the first: add liquidity"
@@ -124,20 +124,22 @@ export function PoolsPage() {
         />
       ) : (
         <>
-          <table className="pools-table" data-agent="pools-table">
-            <thead>
-              <tr>
-                <th scope="col">pair</th>
-                <th scope="col">reserves</th>
-                <th scope="col">tvl</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pools.map((pool) => (
-                <PoolTableRow key={pool.pair} pool={pool} navigate={navigate} />
-              ))}
-            </tbody>
-          </table>
+          <div className="pools-table-scroll">
+            <table className="pools-table" data-agent="pools-table">
+              <thead>
+                <tr>
+                  <th scope="col">pair</th>
+                  <th scope="col">reserves</th>
+                  <th scope="col">tvl</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pools.map((pool) => (
+                  <PoolTableRow key={pool.pair} pool={pool} navigate={navigate} />
+                ))}
+              </tbody>
+            </table>
+          </div>
           {totalCount != null && totalCount > POOLS_LIMIT ? (
             <p className="pools-note" data-agent="pools-limit-note">
               showing first {POOLS_LIMIT} of {totalCount} pools

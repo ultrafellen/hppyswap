@@ -10,15 +10,10 @@
 }
 :root {
   --bg: #12151b; --card: #191e27; --card-border: #232a36;
-  --accent: #4ef0a8; --text: #eef2f6; --text-dim: #6f7a88; --text-data: #aeb8c4;
+  --accent: #4ef0a8; --text: #eef2f6; --text-dim: #8a95a3; --text-data: #aeb8c4;
   --danger: #ff6b6b;
   --radius: 12px; --radius-sm: 10px;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
-}
-:root[data-theme="light"] {
-  --bg: #f4f6f8; --card: #ffffff; --card-border: #dde3ea;
-  --accent: #0bab6b; --text: #14181f; --text-dim: #66707d; --text-data: #3d4654;
-  --danger: #c0392b;
 }
 * { box-sizing: border-box; }
 body {
@@ -26,6 +21,7 @@ body {
   font-family: var(--font-mono); font-size: 14px; line-height: 1.5;
 }
 button { font-family: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; }
 input { font-family: inherit; }
 a { color: inherit; }
 
@@ -73,32 +69,87 @@ main { max-width: 960px; margin: 0 auto; padding: 32px 20px; min-height: 60vh; }
 .site-footer a { color: var(--text-dim); }
 .site-footer a:hover, .site-footer a:focus-visible { color: var(--text); }
 
-/* Theme toggle */
-.theme-toggle {
-  background: var(--card); color: var(--text); border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm); padding: 6px 12px; font-size: 13px;
-}
-
 /* Connect button */
 .connect-wrap { position: relative; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .connect-trigger, .switch-chain, .disconnect {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 34px;
   background: var(--card); color: var(--text); border: 1px solid var(--card-border);
   border-radius: var(--radius-sm); padding: 6px 12px; font-size: 13px;
+  transition: border-color 150ms ease, color 150ms ease;
 }
+.connect-trigger:hover:not(:disabled), .switch-chain:hover:not(:disabled), .disconnect:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.connect-trigger:disabled, .switch-chain:disabled, .disconnect:disabled { color: var(--text-dim); }
+.switch-chain { border-color: var(--danger); color: var(--danger); }
 .connect-menu {
   position: absolute; top: calc(100% + 6px); right: 0;
   display: flex; flex-direction: column; gap: 4px;
   background: var(--card); border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm); padding: 6px; min-width: 160px; z-index: 10;
+  border-radius: var(--radius-sm); padding: 6px; min-width: 200px; z-index: 30;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
-.connect-menu button {
+.connect-option {
+  display: flex; align-items: center; gap: 10px; min-height: 40px;
   background: transparent; border: none; color: var(--text);
-  text-align: left; padding: 6px 8px; border-radius: 6px; font-size: 13px;
+  text-align: left; padding: 8px 10px; border-radius: 6px; font-size: 13px;
+  transition: background-color 150ms ease;
 }
-.connect-menu button:hover, .connect-menu button:focus-visible { background: var(--bg); }
-.connect-menu-empty { margin: 0; padding: 6px 8px; color: var(--text-dim); font-size: 13px; }
-.connect-address { color: var(--text-data); }
-.connect-status { margin: 0; font-size: 12px; color: var(--text-dim); flex-basis: 100%; }
+.connect-option:hover, .connect-option:focus-visible { background: var(--bg); }
+.connect-menu-empty { padding: 6px 8px; color: var(--text-dim); font-size: 13px; }
+.connect-menu-empty p { margin: 0 0 6px; }
+.connect-install-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.connect-install-list a {
+  display: block; padding: 8px 6px; border-radius: 6px; color: var(--text); text-decoration: none;
+}
+.connect-install-list a:hover, .connect-install-list a:focus-visible { background: var(--bg); color: var(--accent); }
+.connect-address { display: inline-flex; align-items: center; gap: 6px; color: var(--text-data); }
+.wallet-icon { width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; object-fit: contain; }
+.wallet-icon-fallback {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--card-border); color: var(--text-dim); font-size: 10px; font-weight: 700;
+}
+
+/* RPC status pill (header) */
+.rpc-indicator {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-dim); font-size: 12px; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.rpc-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.rpc-indicator-loading .rpc-dot, .rpc-indicator-slow .rpc-dot { background: #f0c64e; animation: pulse 1s ease-in-out infinite; }
+.rpc-indicator-loading, .rpc-indicator-slow { color: var(--text-data); }
+.rpc-indicator-slow { color: #f0c64e; }
+.rpc-indicator-error { color: var(--danger); }
+.rpc-indicator-error .rpc-dot { background: var(--danger); }
+
+/* Shared spinner for in-flight network waits */
+.spinner {
+  display: inline-block; width: 11px; height: 11px; margin-right: 7px; vertical-align: -1px;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: spin 700ms linear infinite; flex-shrink: 0;
+}
+.connect-trigger .spinner, .switch-chain .spinner { margin-right: 0; }
+.status-elapsed { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2s; }
+  .rpc-dot { animation: none !important; }
+}
+/* Floats under the connect controls so status/error copy never reflows
+   the header. Stacks when several show at once (e.g. wrong network + error). */
+.connect-status-stack {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 25;
+  display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
+  pointer-events: none;
+}
+.connect-status {
+  margin: 0; font-size: 12px; color: var(--text-dim);
+  background: var(--card); border: 1px solid var(--card-border); border-radius: 6px;
+  padding: 4px 8px; white-space: nowrap; max-width: min(320px, calc(100vw - 32px));
+  overflow: hidden; text-overflow: ellipsis;
+}
 .connect-status-error { color: var(--danger); }
 
 /* StatusLine */
@@ -139,6 +190,11 @@ main { max-width: 960px; margin: 0 auto; padding: 32px 20px; min-height: 60vh; }
   border-radius: 6px; padding: 2px 8px; font-size: 11px;
 }
 
+.flip-button:hover:not(:disabled), .max-button:hover:not(:disabled), .settings-trigger:hover,
+.token-select-trigger:hover:not(:disabled), .percent-button:hover:not(:disabled) { border-color: var(--accent); }
+.flip-button, .max-button, .settings-trigger, .token-select-trigger, .percent-button {
+  transition: border-color 150ms ease;
+}
 .flip-button {
   align-self: center; margin: -6px 0; z-index: 1;
   width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
@@ -155,7 +211,7 @@ main { max-width: 960px; margin: 0 auto; padding: 32px 20px; min-height: 60vh; }
 }
 /* Light neutral backing circle so dark token logos (e.g. HPP's) stay visible
    on the dark theme. Hardcoded (not var(--card)) — token logos are designed
-   for a light backing regardless of app theme. box-sizing: border-box keeps
+   for a light backing. box-sizing: border-box keeps
    the border+padding inside the existing 20px footprint (no layout shift);
    the image itself renders a bit smaller inside the ring. */
 .token-icon-img {
@@ -217,6 +273,8 @@ main { max-width: 960px; margin: 0 auto; padding: 32px 20px; min-height: 60vh; }
   width: 100%; padding: 14px; background: var(--accent); color: var(--bg);
   border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700;
 }
+.execute-button { transition: filter 150ms ease, background-color 150ms ease; }
+.execute-button:hover:not(:disabled) { filter: brightness(1.08); }
 .execute-button:disabled { background: var(--card); color: var(--text-dim); border: 1px solid var(--card-border); }
 
 /* SettingsPopover */
@@ -255,6 +313,7 @@ main { max-width: 960px; margin: 0 auto; padding: 32px 20px; min-height: 60vh; }
 }
 .pools-create:hover, .pools-create:focus-visible { border-color: var(--accent); }
 
+.pools-table-scroll { overflow-x: auto; border-radius: var(--radius); }
 .pools-table {
   width: 100%; border-collapse: collapse;
   background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius);
@@ -297,3 +356,19 @@ main { max-width: 960px; margin: 0 auto; padding: 32px 20px; min-height: 60vh; }
 .percent-button-active { border-color: var(--accent); color: var(--accent); }
 
 .remove-amount-line { margin: 0; color: var(--text-data); font-size: 12px; }
+
+/* Phones: header wraps to two rows; give tappable controls ~40px targets. */
+@media (max-width: 480px) {
+  .nav-links { gap: 10px 14px; }
+  .nav-links a { padding: 8px 0; }
+  .connect-trigger, .switch-chain, .disconnect { min-height: 40px; }
+  .max-button { padding: 6px 12px; }
+  .settings-trigger { padding: 8px 12px; }
+  .flip-button { width: 40px; height: 40px; }
+  /* The connect controls wrap to the left edge on phones, so anchor their
+     popovers to the left instead of overflowing off-screen. */
+  .connect-menu, .connect-status-stack { left: 0; right: auto; align-items: flex-start; }
+  /* Pair + TVL fit a phone; full reserves stay on the pool detail page. */
+  .pools-table th:nth-child(2), .pools-table td:nth-child(2) { display: none; }
+  .pools-table th, .pools-table td { padding-left: 12px; padding-right: 12px; }
+}

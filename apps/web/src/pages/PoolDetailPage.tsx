@@ -10,6 +10,7 @@ import { TokenIcon } from "../components/TokenIcon";
 import { StatusLine, type StatusTone } from "../components/StatusLine";
 import { usePair } from "../hooks/usePair";
 import { useLiquidity } from "../hooks/useLiquidity";
+import { useWrongNetwork } from "../hooks/useWrongNetwork";
 import type { PoolRow, TokenMeta } from "../hooks/usePools";
 import { toPricableToken, useUsdPrice } from "../hooks/useUsdPrices";
 import { buildPoolRows, orderForDisplay } from "../lib/pools";
@@ -61,6 +62,7 @@ export function PoolDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { address: owner, isConnected } = useConnection();
+  const wrongNetwork = useWrongNetwork();
 
   const isNewRoute = pairAddressParam === undefined;
   const routeAddress: Address | null =
@@ -320,6 +322,9 @@ export function PoolDetailPage() {
     if (status === "error" && error) return { message: error, tone: "error" };
     const formShowing = isNewRoute ? !!(tokenA && tokenB) : !!fetchedPool;
     if (!isConnected && formShowing) return { message: "connect a wallet to manage liquidity", tone: "info" };
+    if (wrongNetwork && formShowing) {
+      return { message: "wallet is on the wrong network — switch to HPP Mainnet", tone: "error" };
+    }
     return { message: "", tone: "info" };
   }
 
@@ -466,7 +471,7 @@ export function PoolDetailPage() {
             type="button"
             className="execute-button"
             data-agent="liq-add-execute"
-            disabled={busy || !isConnected || amountA == null || amountA <= 0n || amountB == null || amountB <= 0n}
+            disabled={busy || !isConnected || wrongNetwork || amountA == null || amountA <= 0n || amountB == null || amountB <= 0n}
             onClick={handleAdd}
           >
             add liquidity ↵
@@ -486,7 +491,7 @@ export function PoolDetailPage() {
                   className={removePercent === p ? "percent-button percent-button-active" : "percent-button"}
                   data-agent="liq-remove-percent"
                   data-percent={p}
-                  disabled={busy || !isConnected || lpBalance <= 0n}
+                  disabled={busy || !isConnected || wrongNetwork || lpBalance <= 0n}
                   onClick={() => handlePercentClick(p)}
                 >
                   {p}%
@@ -502,7 +507,7 @@ export function PoolDetailPage() {
             type="button"
             className="execute-button"
             data-agent="liq-remove-execute"
-            disabled={busy || !isConnected || removeAmount <= 0n}
+            disabled={busy || !isConnected || wrongNetwork || removeAmount <= 0n}
             onClick={handleRemove}
           >
             remove liquidity ↵
@@ -510,7 +515,7 @@ export function PoolDetailPage() {
         </div>
       )}
 
-      <StatusLine message={message} tone={tone} dataAgent="liq-status" />
+      <StatusLine message={message} tone={tone} busy={busy || isLoadingPool} dataAgent="liq-status" />
     </div>
   );
 }

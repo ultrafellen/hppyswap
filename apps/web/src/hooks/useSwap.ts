@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import type { Address, Hex } from "viem";
 import { useConnection } from "wagmi";
 import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
-import { ADDRESSES, applySlippage, erc20Abi, isDeployed, routerAbi, type TokenInfo } from "@hppyswap/sdk";
+import { ADDRESSES, hpp, applySlippage, erc20Abi, isDeployed, routerAbi, type TokenInfo } from "@hppyswap/sdk";
 import { wagmiConfig } from "../config/wagmi";
 import { useSettings } from "./useSettings";
 import { humanizeError } from "../lib/errors";
@@ -66,6 +66,11 @@ export function useSwap(): UseSwapReturn {
         if (!isDeployed()) throw new Error("contracts not deployed");
         if (!owner) throw new Error("wallet not connected");
 
+        // Every wagmi action below pins `chainId: hpp.id`. Without it wagmi
+        // skips the chain assertion and sends to whatever network the wallet
+        // is on — e.g. a native-ETH swap to the router address on Ethereum
+        // mainnet, where nothing is deployed and the value would be lost.
+        // With it, viem throws ChainMismatchError instead (humanized below).
         const amountOutMin = applySlippage(quotedOut, settings.slippageBps);
         const deadline = BigInt(Math.floor(Date.now() / 1000) + settings.deadlineMinutes * 60);
 
@@ -73,6 +78,7 @@ export function useSwap(): UseSwapReturn {
         // first (approve-if-short, exact amountIn — not infinite approval).
         if (!tokenIn.isNative) {
           const allowance = await readContract(wagmiConfig, {
+            chainId: hpp.id,
             address: tokenIn.address,
             abi: erc20Abi,
             functionName: "allowance",
@@ -81,12 +87,13 @@ export function useSwap(): UseSwapReturn {
           if (allowance < amountIn) {
             setStatus("approving");
             const approveHash = await writeContract(wagmiConfig, {
+              chainId: hpp.id,
               address: tokenIn.address,
               abi: erc20Abi,
               functionName: "approve",
               args: [ADDRESSES.router, amountIn],
             });
-            const approveReceipt = await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
+            const approveReceipt = await waitForTransactionReceipt(wagmiConfig, { chainId: hpp.id, hash: approveHash });
             if (approveReceipt.status !== "success") throw new Error("approval transaction reverted");
           }
         }
@@ -100,6 +107,7 @@ export function useSwap(): UseSwapReturn {
         // both must agree for the native leg to apply.
         if (path[0].toLowerCase() === ADDRESSES.weth.toLowerCase() && tokenIn.isNative) {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "swapExactETHForTokens",
@@ -108,6 +116,7 @@ export function useSwap(): UseSwapReturn {
           });
         } else if (path[path.length - 1].toLowerCase() === ADDRESSES.weth.toLowerCase() && tokenOut.isNative) {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "swapExactTokensForETH",
@@ -115,6 +124,7 @@ export function useSwap(): UseSwapReturn {
           });
         } else {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "swapExactTokensForTokens",
@@ -122,7 +132,7 @@ export function useSwap(): UseSwapReturn {
           });
         }
 
-        const receipt = await waitForTransactionReceipt(wagmiConfig, { hash });
+        const receipt = await waitForTransactionReceipt(wagmiConfig, { chainId: hpp.id, hash });
         if (receipt.status !== "success") throw new Error("transaction reverted");
 
         setStatus("success");

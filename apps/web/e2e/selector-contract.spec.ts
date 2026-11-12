@@ -19,7 +19,7 @@ const HPP_ADDRESS = "0xB48334E7938367bC24Fe1F19000D6f06C622E6c7";
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
 test.describe("Global (every page) — catalog §Global", () => {
-  test("nav / theme / wallet / status selectors are present on /, theme-toggle flips + persists", async ({
+  test("nav / wallet / status selectors are present on /", async ({
     page,
   }) => {
     await page.goto("/");
@@ -28,8 +28,13 @@ test.describe("Global (every page) — catalog §Global", () => {
     await expect(page.locator('[data-agent="nav-swap"]')).toBeVisible();
     await expect(page.locator('[data-agent="nav-pools"]')).toBeVisible();
     await expect(page.locator('[data-agent="nav-docs"]')).toBeVisible();
-    await expect(page.locator('[data-agent="theme-toggle"]')).toBeVisible();
     await expect(page.locator('[data-agent="wallet-connect"]')).toBeVisible();
+
+    // rpc-status settles to idle once the initial reads finish.
+    const rpc = page.locator('[data-agent="rpc-status"]');
+    await expect(rpc).toBeVisible();
+    await expect(rpc).toHaveAttribute("data-state", "idle", { timeout: 30_000 });
+    await expect(rpc).toHaveText("hpp mainnet");
 
     // catalog: `status-line` is documented as "the underlying pattern" —
     // every concrete page overrides the data-agent to a page-specific name
@@ -43,15 +48,6 @@ test.describe("Global (every page) — catalog §Global", () => {
     const status = page.getByRole("status");
     await expect(status).toBeVisible();
     await expect(status).toHaveAttribute("aria-live", "polite");
-
-    // theme-toggle flips document.documentElement.dataset.theme and
-    // persists to localStorage `hppyswap.theme` (catalog: Global table).
-    const before = await page.evaluate(() => document.documentElement.dataset.theme ?? "dark");
-    await page.locator('[data-agent="theme-toggle"]').click();
-    const after = await page.evaluate(() => document.documentElement.dataset.theme ?? "dark");
-    expect(after).not.toBe(before);
-    const stored = await page.evaluate(() => localStorage.getItem("hppyswap.theme"));
-    expect(stored).toBe(after);
   });
 });
 

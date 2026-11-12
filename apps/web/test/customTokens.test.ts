@@ -4,8 +4,8 @@ import { addCustomToken, loadCustomTokens, saveCustomTokens } from "../src/lib/c
 import type { TokenInfo } from "@hppyswap/sdk";
 import type { Address } from "viem";
 
-// Minimal in-memory Storage stub — same pattern as test/settings.test.ts and
-// test/theme.test.ts (vitest runs under Node, which has no localStorage).
+// Minimal in-memory Storage stub — same pattern as test/settings.test.ts
+// (vitest runs under Node, which has no localStorage).
 class MemoryStorage implements Storage {
   private store = new Map<string, string>();
   get length() { return this.store.size; }

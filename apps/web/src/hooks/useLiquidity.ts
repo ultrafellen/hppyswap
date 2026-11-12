@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import type { Address, Hex } from "viem";
 import { useConnection } from "wagmi";
 import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
-import { ADDRESSES, erc20Abi, isDeployed, pairAbi, routerAbi } from "@hppyswap/sdk";
+import { ADDRESSES, hpp, erc20Abi, isDeployed, pairAbi, routerAbi } from "@hppyswap/sdk";
 import { wagmiConfig } from "../config/wagmi";
 import { useSettings } from "./useSettings";
 import { humanizeError } from "../lib/errors";
@@ -57,6 +57,7 @@ function isWeth(address: Address): boolean {
 
 async function approveIfShort(owner: Address, token: Address, amount: bigint, setStatus: (s: SwapStatus) => void) {
   const allowance = await readContract(wagmiConfig, {
+    chainId: hpp.id,
     address: token,
     abi: erc20Abi,
     functionName: "allowance",
@@ -65,12 +66,13 @@ async function approveIfShort(owner: Address, token: Address, amount: bigint, se
   if (allowance < amount) {
     setStatus("approving");
     const approveHash = await writeContract(wagmiConfig, {
+      chainId: hpp.id,
       address: token,
       abi: erc20Abi,
       functionName: "approve",
       args: [ADDRESSES.router, amount],
     });
-    const approveReceipt = await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
+    const approveReceipt = await waitForTransactionReceipt(wagmiConfig, { chainId: hpp.id, hash: approveHash });
     if (approveReceipt.status !== "success") throw new Error("approval transaction reverted");
   }
 }
@@ -124,6 +126,7 @@ export function useLiquidity(): UseLiquidityReturn {
         let hash: Hex;
         if (nativeA) {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "addLiquidityETH",
@@ -132,6 +135,7 @@ export function useLiquidity(): UseLiquidityReturn {
           });
         } else if (nativeB) {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "addLiquidityETH",
@@ -140,6 +144,7 @@ export function useLiquidity(): UseLiquidityReturn {
           });
         } else {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "addLiquidity",
@@ -147,7 +152,7 @@ export function useLiquidity(): UseLiquidityReturn {
           });
         }
 
-        const receipt = await waitForTransactionReceipt(wagmiConfig, { hash });
+        const receipt = await waitForTransactionReceipt(wagmiConfig, { chainId: hpp.id, hash });
         if (receipt.status !== "success") throw new Error("transaction reverted");
 
         setStatus("success");
@@ -188,6 +193,7 @@ export function useLiquidity(): UseLiquidityReturn {
         // The LP token (the pair contract itself) needs router allowance
         // before it can pull `liquidity` in for the burn.
         const allowance = await readContract(wagmiConfig, {
+          chainId: hpp.id,
           address: pairAddress,
           abi: pairAbi,
           functionName: "allowance",
@@ -196,12 +202,13 @@ export function useLiquidity(): UseLiquidityReturn {
         if (allowance < liquidity) {
           setStatus("approving");
           const approveHash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: pairAddress,
             abi: pairAbi,
             functionName: "approve",
             args: [ADDRESSES.router, liquidity],
           });
-          const approveReceipt = await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
+          const approveReceipt = await waitForTransactionReceipt(wagmiConfig, { chainId: hpp.id, hash: approveHash });
           if (approveReceipt.status !== "success") throw new Error("approval transaction reverted");
         }
 
@@ -212,6 +219,7 @@ export function useLiquidity(): UseLiquidityReturn {
         let hash: Hex;
         if (nativeA) {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "removeLiquidityETH",
@@ -219,6 +227,7 @@ export function useLiquidity(): UseLiquidityReturn {
           });
         } else if (nativeB) {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "removeLiquidityETH",
@@ -226,6 +235,7 @@ export function useLiquidity(): UseLiquidityReturn {
           });
         } else {
           hash = await writeContract(wagmiConfig, {
+            chainId: hpp.id,
             address: ADDRESSES.router,
             abi: routerAbi,
             functionName: "removeLiquidity",
@@ -233,7 +243,7 @@ export function useLiquidity(): UseLiquidityReturn {
           });
         }
 
-        const receipt = await waitForTransactionReceipt(wagmiConfig, { hash });
+        const receipt = await waitForTransactionReceipt(wagmiConfig, { chainId: hpp.id, hash });
         if (receipt.status !== "success") throw new Error("transaction reverted");
 
         setStatus("success");

@@ -20,6 +20,7 @@ import { SettingsPopover } from "../components/SettingsPopover";
 import { StatusLine, type StatusTone } from "../components/StatusLine";
 import { usePair } from "../hooks/usePair";
 import { useSwap } from "../hooks/useSwap";
+import { useWrongNetwork } from "../hooks/useWrongNetwork";
 import { useUsdPrice } from "../hooks/useUsdPrices";
 import { formatAmount, parseAmount, toPlainAmount } from "../lib/format";
 import { formatUsdApprox, usdValueE18 } from "../lib/usd";
@@ -52,6 +53,7 @@ function dotLeader(label: string): string {
 export function SwapPage() {
   const deployed = isDeployed();
   const { address: owner, isConnected } = useConnection();
+  const wrongNetwork = useWrongNetwork();
 
   const [tokenIn, setTokenIn] = useState<TokenInfo>(DEFAULT_TOKENS[0]);
   const [tokenOut, setTokenOut] = useState<TokenInfo | null>(null);
@@ -223,6 +225,7 @@ export function SwapPage() {
   // typed amount — getAmountsOut can't quote a zero input) and settled;
   // before that, a fresh token selection simply shows no error yet rather
   // than guessing.
+  const quoting = quoteEnabled && isQuotesLoading;
   const noRoute = deployed && !!tokenOut && quoteEnabled && !isQuotesLoading && best === null;
 
   // wagmi 3's useBalance is native-currency-only (no ERC20 `token` param —
@@ -233,7 +236,7 @@ export function SwapPage() {
     chainId: hpp.id,
     query: { enabled: isConnected && !!owner && tokenIn.isNative },
   });
-  const { data: erc20BalanceValue } = useReadContract({
+  const { data: erc20BalanceValue, isLoading: isErc20BalanceLoading } = useReadContract({
     address: tokenIn.isNative ? undefined : tokenIn.address,
     abi: erc20Abi,
     functionName: "balanceOf",
@@ -285,6 +288,7 @@ export function SwapPage() {
   const executeDisabled =
     inputsDisabled ||
     !isConnected ||
+    wrongNetwork ||
     !tokenOut ||
     !amountIn ||
     amountIn <= 0n ||
@@ -316,6 +320,7 @@ export function SwapPage() {
     if (swapStatus === "success") return { message: "swap complete", tone: "success" };
     if (swapStatus === "error" && swapError) return { message: swapError, tone: "error" };
     if (!isConnected && tokenOut) return { message: "connect a wallet to swap", tone: "info" };
+    if (wrongNetwork) return { message: "wallet is on the wrong network — switch to HPP Mainnet", tone: "error" };
     if (highImpact && !impactConfirmed) {
       return { message: "price impact is high — confirm to proceed", tone: "error" };
     }
@@ -352,7 +357,13 @@ export function SwapPage() {
             {formatUsdApprox(usdIn)}
           </div>
           <div className="swap-side-balance">
-            balance {balance ? formatAmount(balance.value, balance.decimals, 6) : "—"} {tokenIn.symbol}
+            balance{" "}
+            {balance
+              ? formatAmount(balance.value, balance.decimals, 6)
+              : (tokenIn.isNative ? nativeBalanceQuery.isLoading : isErc20BalanceLoading)
+                ? "loading…"
+                : "—"}{" "}
+            {tokenIn.symbol}
             <button
               type="button"
               className="max-button"
@@ -384,7 +395,7 @@ export function SwapPage() {
               decimals={tokenOut?.decimals ?? 18}
               readOnly
               disabled={inputsDisabled}
-              placeholder="0.0"
+              placeholder={quoting ? "quoting…" : "0.0"}
               dataAgent="swap-amount-out"
             />
             <TokenSelect
@@ -407,7 +418,9 @@ export function SwapPage() {
           <span className="quote-value">
             {tokenOut && displayRate != null
               ? `1 ${tokenIn.symbol} = ${formatAmount(displayRate, tokenOut.decimals, 4)} ${tokenOut.symbol}`
-              : "—"}
+              : quoting
+                ? "quoting…"
+                : "—"}
           </span>
         </div>
         <div className="quote-row">
@@ -437,7 +450,7 @@ export function SwapPage() {
         {executeLabel}
       </button>
 
-      <StatusLine {...statusMessage()} dataAgent="swap-status" />
+      <StatusLine {...statusMessage()} busy={busy} dataAgent="swap-status" />
     </div>
   );
 }
