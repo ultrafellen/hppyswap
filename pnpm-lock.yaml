@@ -170,7 +170,7 @@ importers:
     dependencies:
       '@astrojs/starlight':
         specifier: 0.42.10
-        version: 0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(typescript@7.0.2)
+        version: 0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(supports-color@10.2.2)(typescript@7.0.2)
       '@hppyswap/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
@@ -179,8 +179,11 @@ importers:
         version: 7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1)
       starlight-llms-txt:
         specifier: 0.12.0
-        version: 0.12.0(@astrojs/markdown-satteri@0.4.8)(@astrojs/starlight@0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(typescript@7.0.2))(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))
+        version: 0.12.0(@astrojs/markdown-satteri@0.4.8)(@astrojs/starlight@0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(supports-color@10.2.2)(typescript@7.0.2))(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(supports-color@10.2.2)
     devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
       wrangler:
         specifier: 4.160.0
         version: 4.160.0(@types/node@26.6.6)
@@ -2853,7 +2856,7 @@ snapshots:
       sitemap: 9.0.1
       zod: 4.6.7
 
-  '@astrojs/starlight@0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(typescript@7.0.2)':
+  '@astrojs/starlight@0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(supports-color@10.2.2)(typescript@7.0.2)':
     dependencies:
       '@astrojs/markdown-satteri': 0.4.8
       '@astrojs/mdx': 8.1.4(@astrojs/markdown-satteri@0.4.8)(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))
@@ -2872,11 +2875,11 @@ snapshots:
       i18next: 26.7.2(typescript@7.0.2)
       klona: 2.0.6
       magic-string: 1.4.5
-      mdast-util-directive: 3.2.0
+      mdast-util-directive: 3.2.0(supports-color@10.2.2)
       mdast-util-to-markdown: 2.2.3
       mdast-util-to-string: 4.0.0
       pagefind: 1.6.0
-      remark-directive: 4.0.0
+      remark-directive: 4.0.0(supports-color@10.2.2)
       satteri: 0.10.5
       ultrahtml: 1.7.0
       unified: 11.0.5
@@ -3847,9 +3850,11 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  debug@4.4.3:
+  debug@4.4.3(supports-color@10.2.2):
     dependencies:
       ms: 2.1.3
+    optionalDependencies:
+      supports-color: 10.2.2
 
   decode-named-character-reference@1.3.0:
     dependencies:
@@ -4244,13 +4249,13 @@ snapshots:
 
   markdown-table@3.1.0: {}
 
-  mdast-util-directive@3.2.0:
+  mdast-util-directive@3.2.0(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
       '@types/unist': 3.0.3
       ccount: 2.0.1
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.1.0
+      mdast-util-from-markdown: 2.1.0(supports-color@10.2.2)
       mdast-util-to-markdown: 2.2.3
       micromark-util-character: 2.1.1
       parse-entities: 4.0.2
@@ -4265,14 +4270,14 @@ snapshots:
       unist-util-is: 6.0.1
       unist-util-visit-parents: 6.1.0
 
-  mdast-util-from-markdown@2.1.0:
+  mdast-util-from-markdown@2.1.0(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
       '@types/unist': 3.0.3
       decode-named-character-reference: 1.3.0
       devlop: 1.1.0
       mdast-util-to-string: 4.0.0
-      micromark: 4.0.3
+      micromark: 4.0.3(supports-color@10.2.2)
       micromark-util-decode-numeric-character-reference: 2.0.2
       micromark-util-decode-string: 2.0.1
       micromark-util-normalize-identifier: 2.0.1
@@ -4290,53 +4295,53 @@ snapshots:
       mdast-util-find-and-replace: 3.0.4
       micromark-util-character: 2.1.1
 
-  mdast-util-gfm-footnote@2.1.0:
+  mdast-util-gfm-footnote@2.1.0(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.1.0
+      mdast-util-from-markdown: 2.1.0(supports-color@10.2.2)
       mdast-util-to-markdown: 2.2.3
       micromark-util-normalize-identifier: 2.0.1
     transitivePeerDependencies:
       - supports-color
 
-  mdast-util-gfm-strikethrough@2.0.1:
+  mdast-util-gfm-strikethrough@2.0.1(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-from-markdown: 2.1.0
+      mdast-util-from-markdown: 2.1.0(supports-color@10.2.2)
       mdast-util-to-markdown: 2.2.3
     transitivePeerDependencies:
       - supports-color
 
-  mdast-util-gfm-table@2.0.1:
+  mdast-util-gfm-table@2.0.1(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
       markdown-table: 3.1.0
-      mdast-util-from-markdown: 2.1.0
+      mdast-util-from-markdown: 2.1.0(supports-color@10.2.2)
       mdast-util-to-markdown: 2.2.3
       mdast-util-to-string: 4.0.0
       unist-util-visit: 5.2.0
     transitivePeerDependencies:
       - supports-color
 
-  mdast-util-gfm-task-list-item@2.0.1:
+  mdast-util-gfm-task-list-item@2.0.1(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.1.0
+      mdast-util-from-markdown: 2.1.0(supports-color@10.2.2)
       mdast-util-to-markdown: 2.2.3
     transitivePeerDependencies:
       - supports-color
 
-  mdast-util-gfm@3.1.0:
+  mdast-util-gfm@3.1.0(supports-color@10.2.2):
     dependencies:
-      mdast-util-from-markdown: 2.1.0
+      mdast-util-from-markdown: 2.1.0(supports-color@10.2.2)
       mdast-util-gfm-autolink-literal: 2.1.0
-      mdast-util-gfm-footnote: 2.1.0
-      mdast-util-gfm-strikethrough: 2.0.1
-      mdast-util-gfm-table: 2.0.1
-      mdast-util-gfm-task-list-item: 2.0.1
+      mdast-util-gfm-footnote: 2.1.0(supports-color@10.2.2)
+      mdast-util-gfm-strikethrough: 2.0.1(supports-color@10.2.2)
+      mdast-util-gfm-table: 2.0.1(supports-color@10.2.2)
+      mdast-util-gfm-task-list-item: 2.0.1(supports-color@10.2.2)
       mdast-util-to-markdown: 2.2.3
     transitivePeerDependencies:
       - supports-color
@@ -4564,10 +4569,10 @@ snapshots:
 
   micromark-util-types@2.0.3: {}
 
-  micromark@4.0.3:
+  micromark@4.0.3(supports-color@10.2.2):
     dependencies:
       '@types/debug': 4.1.13
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@10.2.2)
       decode-named-character-reference: 1.3.0
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.4
@@ -4789,30 +4794,30 @@ snapshots:
       unified: 11.0.5
       vfile: 6.0.3
 
-  remark-directive@4.0.0:
+  remark-directive@4.0.0(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-directive: 3.2.0
+      mdast-util-directive: 3.2.0(supports-color@10.2.2)
       micromark-extension-directive: 4.0.0
       unified: 11.0.5
     transitivePeerDependencies:
       - supports-color
 
-  remark-gfm@4.0.1:
+  remark-gfm@4.0.1(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-gfm: 3.1.0
+      mdast-util-gfm: 3.1.0(supports-color@10.2.2)
       micromark-extension-gfm: 3.0.0
-      remark-parse: 11.0.0
+      remark-parse: 11.0.0(supports-color@10.2.2)
       remark-stringify: 11.0.0
       unified: 11.0.5
     transitivePeerDependencies:
       - supports-color
 
-  remark-parse@11.0.0:
+  remark-parse@11.0.0(supports-color@10.2.2):
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-from-markdown: 2.1.0
+      mdast-util-from-markdown: 2.1.0(supports-color@10.2.2)
       micromark-util-types: 2.0.3
       unified: 11.0.5
     transitivePeerDependencies:
@@ -4954,10 +4959,10 @@ snapshots:
 
   space-separated-tokens@2.0.2: {}
 
-  starlight-llms-txt@0.12.0(@astrojs/markdown-satteri@0.4.8)(@astrojs/starlight@0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(typescript@7.0.2))(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1)):
+  starlight-llms-txt@0.12.0(@astrojs/markdown-satteri@0.4.8)(@astrojs/starlight@0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(supports-color@10.2.2)(typescript@7.0.2))(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(supports-color@10.2.2):
     dependencies:
       '@astrojs/mdx': 8.1.4(@astrojs/markdown-satteri@0.4.8)(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))
-      '@astrojs/starlight': 0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(typescript@7.0.2)
+      '@astrojs/starlight': 0.42.10(astro@7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1))(supports-color@10.2.2)(typescript@7.0.2)
       '@types/hast': 3.0.5
       '@types/micromatch': 4.0.10
       astro: 7.4.10(@types/node@26.6.6)(esbuild@0.28.2)(yaml@2.9.1)
@@ -4966,7 +4971,7 @@ snapshots:
       micromatch: 4.0.8
       rehype-parse: 9.0.1
       rehype-remark: 10.0.1
-      remark-gfm: 4.0.1
+      remark-gfm: 4.0.1(supports-color@10.2.2)
       remark-stringify: 11.0.0
       unified: 11.0.5
       unist-util-remove: 4.0.0
