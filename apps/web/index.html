@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>hppyswap</title>
+    <meta
+      name="description"
+      content="HPPYSwap — an AMM DEX on HPP Mainnet. This page needs JavaScript; AI agents should read https://hppy.ai/llms.txt or https://docs.hppy.ai/agents/overview/ instead."
+    />
+    <!-- Machine-readable entry points for agents that fetch this HTML
+         without executing JavaScript (see the static fallback in #root). -->
+    <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
+    <link rel="help" href="https://docs.hppy.ai/agents/overview/" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -13,6 +21,11 @@
          attribute selector below matches on first paint — no flash either way. -->
     <script>
       (function () {
+        try {
+          // Hides the static no-JS fallback inside #root before first paint;
+          // its own try so a storage failure below can't skip it.
+          document.documentElement.classList.add("js");
+        } catch (e) {}
         try {
           if (localStorage.getItem("hppyswap.theme") === "light") {
             document.documentElement.dataset.theme = "light";
@@ -27,10 +40,31 @@
     <style>
       html, body { background: #12151b; color: #eef2f6; }
       html[data-theme="light"], html[data-theme="light"] body { background: #f4f6f8; color: #14181f; }
+      html.js .no-js-fallback { display: none; }
+      .no-js-fallback { max-width: 40rem; margin: 3rem auto; padding: 0 16px; font-family: ui-monospace, monospace; line-height: 1.6; }
+      .no-js-fallback a { color: inherit; }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Static fallback for clients that don't run JavaScript (most AI agents
+         and fetch tools). React's createRoot().render replaces everything
+         inside #root on mount, and html.js hides it before first paint, so
+         JS-capable browsers never see it. Keep these URLs in sync with
+         public/llms.txt and Layout.tsx. -->
+    <div id="root">
+      <div class="no-js-fallback">
+        <h1>HPPYSwap</h1>
+        <p>An AMM DEX (Uniswap V2 fork) on HPP Mainnet (chainId 190415). This web app requires JavaScript.</p>
+        <p><strong>AI agents: this page is a JavaScript app — read these documents instead.</strong></p>
+        <ul>
+          <li><a href="https://hppy.ai/llms.txt">hppy.ai/llms.txt</a> — agent entry point for this site</li>
+          <li><a href="https://docs.hppy.ai/agents/overview/">docs.hppy.ai/agents/overview</a> — agents overview</li>
+          <li><a href="https://raw.githubusercontent.com/ultrafellen/hppyswap/main/skills/hppyswap-dex/SKILL.md">Agent Skill (SKILL.md)</a> — everything in one file</li>
+          <li><a href="https://docs.hppy.ai/llms-full.txt">docs.hppy.ai/llms-full.txt</a> — full documentation as plain text</li>
+          <li><a href="https://docs.hppy.ai/agents/hppyswap.json">docs.hppy.ai/agents/hppyswap.json</a> — machine-readable manifest (chain, contracts, tokens)</li>
+        </ul>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

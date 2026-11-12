@@ -1,0 +1,22 @@
+# HPPYSwap
+
+> HPPYSwap (hppy.ai) is an AMM DEX on HPP Mainnet (chainId 190415, RPC https://mainnet.hpp.io) — a direct fork of Uniswap V2: constant-product pools, 0.3% swap fee, permissionless pool creation. The hppy.ai web app is a JavaScript single-page app, so its HTML carries no content for agents that don't execute JS. Use the resources below instead.
+
+## Start here
+
+- [Agent Skill](https://raw.githubusercontent.com/ultrafellen/hppyswap/main/skills/hppyswap-dex/SKILL.md): everything an agent needs in one file — contracts, swaps, liquidity, and driving the web UI
+- [Agents overview](https://docs.hppy.ai/agents/overview/): entry point for AI agents in the docs
+- [Agent manifest](https://docs.hppy.ai/agents/hppyswap.json): machine-readable JSON — chain info, deployment status, contract addresses, default tokens
+
+## Documentation
+
+- [Docs llms.txt](https://docs.hppy.ai/llms.txt): link index of the full documentation
+- [Full documentation](https://docs.hppy.ai/llms-full.txt): every doc page as one plain-text file
+- [Abridged documentation](https://docs.hppy.ai/llms-small.txt): compact version of the documentation
+
+## Optional
+
+- [ABIs](https://docs.hppy.ai/agents/abis.json): factory/router/pair/weth/erc20 ABI arrays as JSON
+- [Token list](https://docs.hppy.ai/tokenlist.json): default tokens in the Uniswap Token List schema
+- [UI selector catalog](https://docs.hppy.ai/agents/ui-selectors/): data-agent selectors for agents driving the web UI in a JS-capable browser
+- [Revert dictionary](https://docs.hppy.ai/agents/errors/): every contract revert string and how to respond
